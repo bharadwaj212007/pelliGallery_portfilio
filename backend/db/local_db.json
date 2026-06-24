@@ -1,0 +1,193 @@
+{
+  "admins": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "$2a$10$S9W3R7/1908R1t6cK5aVLeM34lVvX6J4t9a93/0o76rW6g1K0.L2S",
+      "created_at": "2026-06-16T05:39:57.628Z"
+    }
+  ],
+  "gallery_categories": [
+    {
+      "id": 1,
+      "name": "Weddings",
+      "slug": "weddings"
+    },
+    {
+      "id": 2,
+      "name": "Birthdays",
+      "slug": "birthdays"
+    },
+    {
+      "id": 3,
+      "name": "Corporate Events",
+      "slug": "corporate"
+    },
+    {
+      "id": 4,
+      "name": "Pre-Wedding Shoots",
+      "slug": "pre-wedding"
+    }
+  ],
+  "gallery_images": [
+    {
+      "id": 1,
+      "category_id": 1,
+      "image_url": "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
+      "public_id": "mock_wedding_1",
+      "title": "Royal Mandapam Ceremony",
+      "sort_order": 1,
+      "created_at": "2026-06-16T05:39:57.629Z"
+    },
+    {
+      "id": 2,
+      "category_id": 1,
+      "image_url": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80",
+      "public_id": "mock_wedding_2",
+      "title": "Bridal Portrait",
+      "sort_order": 2,
+      "created_at": "2026-06-16T05:39:57.629Z"
+    },
+    {
+      "id": 3,
+      "category_id": 4,
+      "image_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=1200&q=80",
+      "public_id": "mock_pre_wedding_1",
+      "title": "Golden Hour Sunset Walk",
+      "sort_order": 3,
+      "created_at": "2026-06-16T05:39:57.629Z"
+    },
+    {
+      "id": 4,
+      "category_id": 2,
+      "image_url": "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=1200&q=80",
+      "public_id": "mock_birthday_1",
+      "title": "Joyous Cake Cutting",
+      "sort_order": 4,
+      "created_at": "2026-06-16T05:39:57.629Z"
+    },
+    {
+      "id": 5,
+      "category_id": 3,
+      "image_url": "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80",
+      "public_id": "mock_corporate_1",
+      "title": "Annual Gala Stage",
+      "sort_order": 5,
+      "created_at": "2026-06-16T05:39:57.629Z"
+    }
+  ],
+  "packages": [
+    {
+      "id": 1,
+      "name": "Classic Wedding Package",
+      "description": "Perfect for intimate weddings and celebrations capturing essential milestones.",
+      "price": 150000,
+      "inclusions": [
+        "1 Lead Photographer",
+        "1 Cinematographer",
+        "150 Edited Photos",
+        "Standard Album",
+        "Full HD Highlights Video"
+      ],
+      "customization_options": [
+        {
+          "id": "opt_drone",
+          "name": "Drone Coverage",
+          "price": 25000
+        },
+        {
+          "id": "opt_album_premium",
+          "name": "Premium Leather Album Upgrade",
+          "price": 15000
+        },
+        {
+          "id": "opt_extra_day",
+          "name": "Additional Event Day",
+          "price": 50000
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Royal Muhurtham & Reception",
+      "description": "Comprehensive photography and film coverage for grandeur multi-day traditional weddings.",
+      "price": 250000,
+      "inclusions": [
+        "2 Traditional Photographers",
+        "1 Candid Specialist",
+        "2 Cinematographers",
+        "300 Edited Photos",
+        "2 Luxury Canvera Albums",
+        "4K Cinematic Wedding Film"
+      ],
+      "customization_options": [
+        {
+          "id": "opt_drone_4k",
+          "name": "Dual 4K Drone Coverage",
+          "price": 40000
+        },
+        {
+          "id": "opt_pre_wedding",
+          "name": "Pre-Wedding Portrait Session",
+          "price": 30000
+        },
+        {
+          "id": "opt_led_wall",
+          "name": "Live LED Wall Projection",
+          "price": 20000
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Pre-Wedding Cinematic Shoot",
+      "description": "A beautiful outdoor story-telling couple session at scenic spots around Hyderabad.",
+      "price": 45000,
+      "inclusions": [
+        "1 Candid Photographer",
+        "1 Cinematic Videographer",
+        "30 Edited Images",
+        "2-Minute Cinematic Invitation Video",
+        "Location Guidance"
+      ],
+      "customization_options": [
+        {
+          "id": "opt_makeup",
+          "name": "Stylist & Makeup Artist",
+          "price": 15000
+        },
+        {
+          "id": "opt_props",
+          "name": "Themed Props & Smoke Bombs",
+          "price": 5000
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Celebrations & Birthdays",
+      "description": "Vibrant and candid capturing of birthdays, anniversaries, and family functions.",
+      "price": 30000,
+      "inclusions": [
+        "1 Photographer",
+        "All Raw Images",
+        "50 High-res Edited Photos",
+        "Digital Photo Album Link"
+      ],
+      "customization_options": [
+        {
+          "id": "opt_photobooth",
+          "name": "Instant Print Photobooth (3 hours)",
+          "price": 12000
+        },
+        {
+          "id": "opt_videography",
+          "name": "Event Highlight Reel (1 min)",
+          "price": 10000
+        }
+      ]
+    }
+  ],
+  "bookings": [],
+  "booking_packages": []
+}
