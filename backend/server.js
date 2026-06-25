@@ -19,8 +19,6 @@ console.log(
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 import connectDB from './config/db.js';
 
@@ -31,9 +29,6 @@ import packageRoutes from './routes/packages.js';
 import bookingRoutes from './routes/bookings.js';
 import dashboardRoutes from './routes/dashboard.js';
 import errorHandler from './middleware/errorHandler.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -72,35 +67,19 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 // API 404
-app.use('/api/*', (req, res, next) => {
-  const err = new Error(
-    `Resource ${req.originalUrl} not found`
-  );
+app.use('/api', (req, res, next) => {
+  const err = new Error(`Resource ${req.originalUrl} not found`);
   err.status = 404;
   next(err);
 });
 
-// Frontend
-if (process.env.NODE_ENV === 'production') {
-  const frontendBuild = path.join(
-    __dirname,
-    '../frontend/dist'
-  );
-
-  app.use(express.static(frontendBuild));
-
-  app.get('*', (req, res) => {
-    res.sendFile(
-      path.join(frontendBuild, 'index.html')
-    );
+// Root Route
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'PelliGallery Backend API is live'
   });
-} else {
-  app.get('*', (req, res) => {
-    res.send(
-      'PelliGallery API Server is running in development mode. API is live at /api/*'
-    );
-  });
-}
+});
 
 // Error Handler
 app.use(errorHandler);
