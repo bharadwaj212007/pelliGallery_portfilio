@@ -69,7 +69,7 @@ const galleryImagesData = [
   {
     categoryName: 'Pre Wedding',
     title: 'Golden Hour Outdoor Couple Walk',
-    imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=1200&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1510076857177-7470076d4098?auto=format&fit=crop&w=1200&q=80',
     public_id: 'seeder_prewedding_1'
   },
   {

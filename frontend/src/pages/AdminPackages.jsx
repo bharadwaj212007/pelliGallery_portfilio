@@ -277,7 +277,7 @@ export const AdminPackages = () => {
           {/* Custom options add-ons builder */}
           <div className="space-y-2 border-t border-stone-150 pt-3">
             <label className="text-[9px] uppercase tracking-widest text-stone-500 font-semibold">Custom Add-on Options</label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input 
                 type="text" 
                 value={newCustomName}
@@ -285,20 +285,22 @@ export const AdminPackages = () => {
                 placeholder="Add-on (e.g. Drone)"
                 className="flex-1 bg-luxury-bg border border-stone-200 rounded px-2.5 py-2.5 text-[11px] text-stone-850 focus:border-gold focus:outline-none shadow-inner"
               />
-              <input 
-                type="number" 
-                value={newCustomPrice}
-                onChange={(e) => setNewCustomPrice(e.target.value)}
-                placeholder="Price (INR)"
-                className="w-24 bg-luxury-bg border border-stone-200 rounded px-2.5 py-2.5 text-[11px] text-stone-850 focus:border-gold focus:outline-none shadow-inner"
-              />
-              <button
-                type="button"
-                onClick={handleAddCustom}
-                className="bg-white border border-stone-250 hover:border-gold hover:text-gold px-3 py-2.5 rounded text-xs transition-colors cursor-pointer font-semibold uppercase tracking-wider"
-              >
-                Add
-              </button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <input 
+                  type="number" 
+                  value={newCustomPrice}
+                  onChange={(e) => setNewCustomPrice(e.target.value)}
+                  placeholder="Price (INR)"
+                  className="flex-1 sm:w-24 bg-luxury-bg border border-stone-200 rounded px-2.5 py-2.5 text-[11px] text-stone-850 focus:border-gold focus:outline-none shadow-inner"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCustom}
+                  className="bg-white border border-stone-250 hover:border-gold hover:text-gold px-4 py-2.5 rounded text-xs transition-colors cursor-pointer font-semibold uppercase tracking-wider whitespace-nowrap"
+                >
+                  Add
+                </button>
+              </div>
             </div>
             {/* List options */}
             {customs.length > 0 && (

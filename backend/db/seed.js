@@ -21,45 +21,146 @@ const categories = [
 
 const packages = [
   {
-    name: 'Classic Wedding Package',
-    description: 'Perfect for intimate weddings and celebrations capturing essential milestones.',
-    price: 150000.00,
-    inclusions: ['1 Lead Photographer', '1 Cinematographer', '150 Edited Photos', 'Standard Album', 'Full HD Highlights Video'],
+    name: 'Wedding Photography',
+    description: 'Traditional and candid wedding photography captures for your most grand royal celebrations.',
+    price: 50000.00,
+    inclusions: ['Traditional Wedding', 'Candid Photography', 'Bridal Portraits', 'Groom Portraits', 'Family Photography', 'Drone Photography', 'Cinematic Coverage'],
     customization_options: JSON.stringify([
-      { id: 'opt_drone', name: 'Drone Coverage', price: 25000 },
-      { id: 'opt_album_premium', name: 'Premium Leather Album Upgrade', price: 15000 },
-      { id: 'opt_extra_day', name: 'Additional Event Day', price: 50000 }
+      { id: 'opt_drone', name: 'Drone Coverage Upgrade', price: 10000 },
+      { id: 'opt_album', name: 'Premium Hardbound Album Upgrade', price: 10000 },
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
     ])
   },
   {
-    name: 'Royal Muhurtham & Reception',
-    description: 'Comprehensive photography and film coverage for grandeur multi-day traditional weddings.',
-    price: 250000.00,
-    inclusions: ['2 Traditional Photographers', '1 Candid Specialist', '2 Cinematographers', '300 Edited Photos', '2 Luxury Canvera Albums', '4K Cinematic Wedding Film'],
+    name: 'Pre-Wedding Shoot',
+    description: 'Cinematic romance and couple portraits at scenic lakes, mountains, and forest destinations.',
+    price: 25000.00,
+    inclusions: ['Outdoor Locations', 'Cinematic Photos', 'Couple Portraits', 'Sunset Photography', 'Drone Shoot', 'Creative Concepts'],
     customization_options: JSON.stringify([
-      { id: 'opt_drone_4k', name: 'Dual 4K Drone Coverage', price: 40000 },
-      { id: 'opt_pre_wedding', name: 'Pre-Wedding Portrait Session', price: 30000 },
-      { id: 'opt_led_wall', name: 'Live LED Wall Projection', price: 20000 }
+      { id: 'opt_album', name: 'Premium Hardbound Album Upgrade', price: 10000 },
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
     ])
   },
   {
-    name: 'Pre-Wedding Cinematic Shoot',
-    description: 'A beautiful outdoor story-telling couple session at scenic spots around Hyderabad.',
-    price: 45000.00,
-    inclusions: ['1 Candid Photographer', '1 Cinematic Videographer', '30 Edited Images', '2-Minute Cinematic Invitation Video', 'Location Guidance'],
+    name: 'Engagement Photography',
+    description: 'Documenting the ring exchange ceremony, stage decor, and intimate family moments.',
+    price: 20000.00,
+    inclusions: ['Ring Ceremony', 'Couple Portraits', 'Family Moments', 'Decorations', 'Stage Photography'],
     customization_options: JSON.stringify([
-      { id: 'opt_makeup', name: 'Stylist & Makeup Artist', price: 15000 },
-      { id: 'opt_props', name: 'Themed Props & Smoke Bombs', price: 5000 }
+      { id: 'opt_album', name: 'Premium Hardbound Album Upgrade', price: 10000 },
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
     ])
   },
   {
-    name: 'Celebrations & Birthdays',
-    description: 'Vibrant and candid capturing of birthdays, anniversaries, and family functions.',
+    name: 'Reception Photography',
+    description: 'Capturing the grand couple entry, dance floor celebrations, and guest interactions under luxury lighting.',
     price: 30000.00,
-    inclusions: ['1 Photographer', 'All Raw Images', '50 High-res Edited Photos', 'Digital Photo Album Link'],
+    inclusions: ['Couple Entry', 'Stage Photography', 'Family Portraits', 'Dance Coverage', 'Guest Photography'],
     customization_options: JSON.stringify([
-      { id: 'opt_photobooth', name: 'Instant Print Photobooth (3 hours)', price: 12000 },
-      { id: 'opt_videography', name: 'Event Highlight Reel (1 min)', price: 10000 }
+      { id: 'opt_drone', name: 'Drone Coverage Upgrade', price: 10000 },
+      { id: 'opt_album', name: 'Premium Hardbound Album Upgrade', price: 10000 },
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
+    ])
+  },
+  {
+    name: 'Haldi Ceremony',
+    description: 'Bright and happy snapshots of the traditional turmeric splash and fun family moments.',
+    price: 18000.00,
+    inclusions: ['Traditional Rituals', 'Candid Photography', 'Family Moments', 'Decorations', 'Drone Coverage'],
+    customization_options: JSON.stringify([
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
+    ])
+  },
+  {
+    name: 'Mehendi Photography',
+    description: 'Intricate close-ups of bridal mehendi, happy family portraits, and candid smiles.',
+    price: 18000.00,
+    inclusions: ['Bride Portraits', 'Mehendi Close-ups', 'Family Photography', 'Decor', 'Candid Moments'],
+    customization_options: JSON.stringify([
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
+    ])
+  },
+  {
+    name: 'Birthday Photography',
+    description: 'Colorful and joyful visual logs of kids or adult birthday cake cuttings and balloon stage decors.',
+    price: 12000.00,
+    inclusions: ['Kids Birthday', 'Adult Birthday', 'Cake Cutting', 'Family Photography', 'Decorations'],
+    customization_options: JSON.stringify([
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
+    ])
+  },
+  {
+    name: 'Maternity Shoot',
+    description: 'Celebrate the beautiful new beginnings with creative indoor/outdoor couple and family portraits.',
+    price: 15000.00,
+    inclusions: ['Indoor Shoot', 'Outdoor Shoot', 'Couple Photos', 'Family Photos', 'Artistic Portraits'],
+    customization_options: JSON.stringify([
+      { id: 'opt_album', name: 'Premium Hardbound Album Upgrade', price: 10000 },
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
+    ])
+  },
+  {
+    name: 'Baby Shoot',
+    description: 'Adorable newborns theme setups, cute creative poses, and heartwarming family memories.',
+    price: 10000.00,
+    inclusions: ['Newborn Photography', 'Theme Setup', 'Family Portraits', 'Creative Poses'],
+    customization_options: JSON.stringify([
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
+    ])
+  },
+  {
+    name: 'Corporate Events',
+    description: 'Modern, sharp photography logging business meetings, panel discussions, galas, and summits.',
+    price: 20000.00,
+    inclusions: ['Conferences', 'Product Launches', 'Award Functions', 'Business Meetings', 'Team Events'],
+    customization_options: JSON.stringify([
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
+    ])
+  },
+  {
+    name: 'Fashion Photography',
+    description: 'Studio and outdoor brand shoots creating a stunning professional model portfolio.',
+    price: 18000.00,
+    inclusions: ['Model Portfolio', 'Brand Shoot', 'Studio Photography', 'Outdoor Fashion'],
+    customization_options: JSON.stringify([
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
+    ])
+  },
+  {
+    name: 'Product Photography',
+    description: 'High-definition lifestyle, jewelry, food, and e-commerce product catalog layouts.',
+    price: 8000.00,
+    inclusions: ['Ecommerce Products', 'Jewelry', 'Electronics', 'Food Photography', 'Lifestyle Products'],
+    customization_options: JSON.stringify([
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
+    ])
+  },
+  {
+    name: 'Event Photography',
+    description: 'Covering private gigs, cultural programs, college festivals, concerts, and live shows.',
+    price: 15000.00,
+    inclusions: ['College Events', 'Cultural Programs', 'Concerts', 'Live Shows', 'Private Events'],
+    customization_options: JSON.stringify([
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
+    ])
+  },
+  {
+    name: 'Drone Photography',
+    description: 'High-altitude dynamic venue coverage and breathtaking aerial photography captures.',
+    price: 10000.00,
+    inclusions: ['Wedding Drone Coverage', 'Aerial Photography', 'Venue Coverage', 'Outdoor Events'],
+    customization_options: JSON.stringify([
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
+    ])
+  },
+  {
+    name: 'Cinematic Videography',
+    description: 'Stunning 4K cinematic wedding films, teaser trailers, highlight reels, and full multi-cam event captures.',
+    price: 35000.00,
+    inclusions: ['Wedding Film', 'Teaser Video', 'Highlight Reel', 'Full Event Coverage', '4K Video'],
+    customization_options: JSON.stringify([
+      { id: 'opt_drone', name: 'Drone Coverage Upgrade', price: 10000 },
+      { id: 'opt_express', name: 'Express Delivery (48 Hours)', price: 5000 }
     ])
   }
 ];

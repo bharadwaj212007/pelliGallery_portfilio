@@ -425,20 +425,23 @@ export const Checkout = () => {
         </div>
 
         {/* Progress wizard bar */}
-        <div className="max-w-xl mx-auto bg-white border border-stone-200 p-4 rounded-full shadow-sm flex justify-between items-center text-[10px] uppercase tracking-widest font-semibold text-stone-400 px-6 sm:px-10">
-          <div className="flex items-center gap-2 text-stone-500">
-            <span className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[9px]">1</span>
+        <div className="max-w-xl mx-auto bg-white border border-stone-200 p-3 sm:p-4 rounded-full shadow-sm flex justify-between items-center text-[8px] sm:text-[10px] uppercase tracking-widest font-semibold text-stone-400 px-3 sm:px-10 gap-1 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-2 text-stone-500">
+            <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-stone-100 flex items-center justify-center text-[8px] sm:text-[9px]">1</span>
             <span>Cart</span>
           </div>
-          <div className="w-8 h-px bg-stone-200" />
-          <div className="flex items-center gap-2 text-gold font-bold">
-            <span className="w-5 h-5 rounded-full bg-gold/10 text-gold flex items-center justify-center text-[9px] border border-gold/30">2</span>
+          <div className="w-4 sm:w-8 h-px bg-stone-200" />
+          <div className="flex items-center gap-1 sm:gap-2 text-gold font-bold">
+            <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gold/10 text-gold flex items-center justify-center text-[8px] sm:text-[9px] border border-gold/30">2</span>
             <span>Details</span>
           </div>
-          <div className="w-8 h-px bg-stone-200" />
-          <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-stone-100 flex items-center justify-center text-[9px]">3</span>
-            <span>Confirmation</span>
+          <div className="w-4 sm:w-8 h-px bg-stone-200" />
+          <div className="flex items-center gap-1 sm:gap-2">
+            <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-stone-100 flex items-center justify-center text-[8px] sm:text-[9px]">3</span>
+            <span>
+              <span className="hidden sm:inline">Confirmation</span>
+              <span className="sm:hidden">Confirm</span>
+            </span>
           </div>
         </div>
 

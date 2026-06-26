@@ -50,7 +50,7 @@ export const Portfolio = () => {
     : images.filter(img => img.category_slug === selectedCategory);
 
   return (
-    <div className="bg-luxury-bg min-h-screen pt-32 pb-24">
+    <div className="bg-luxury-bg min-h-screen pt-24 sm:pt-32 pb-24">
       <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-12">
         {/* Page Header */}
         <div className="text-center space-y-4">
@@ -67,10 +67,10 @@ export const Portfolio = () => {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex flex-wrap justify-center gap-2 md:gap-3 border-b border-stone-250/60 pb-8">
+        <div className="flex flex-wrap justify-center gap-1.5 md:gap-3 border-b border-stone-250/60 pb-8">
           <button
             onClick={() => setSelectedCategory('all')}
-            className={`px-6 py-2.5 rounded-full text-[10px] font-semibold tracking-widest uppercase transition-all duration-300 ${
+            className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-semibold tracking-widest uppercase transition-all duration-300 ${
               selectedCategory === 'all'
                 ? 'bg-luxury-black text-white shadow-md shadow-black/10 border border-luxury-black'
                 : 'bg-white border border-stone-200 text-stone-600 hover:text-luxury-black hover:border-stone-400'
@@ -82,7 +82,7 @@ export const Portfolio = () => {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.slug)}
-              className={`px-6 py-2.5 rounded-full text-[10px] font-semibold tracking-widest uppercase transition-all duration-300 ${
+              className={`px-3 sm:px-6 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-semibold tracking-widest uppercase transition-all duration-300 ${
                 selectedCategory === cat.slug
                   ? 'bg-luxury-black text-white shadow-md shadow-black/10 border border-luxury-black'
                   : 'bg-white border border-stone-200 text-stone-600 hover:text-luxury-black hover:border-stone-400'
@@ -106,12 +106,12 @@ export const Portfolio = () => {
           </div>
         ) : (
           /* Pinterest Masonry Grid using CSS columns */
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6 animate-fade-in">
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 animate-fade-in">
             {filteredImages.map((img, index) => (
               <div 
                 key={img.id}
                 onClick={() => setLightboxIndex(index)}
-                className="break-inside-avoid group relative cursor-pointer overflow-hidden rounded-lg border border-stone-200/60 bg-white p-2 hover:border-gold/40 hover:shadow-xl transition-all duration-300"
+                className="break-inside-avoid mb-6 group relative cursor-pointer overflow-hidden rounded-lg border border-stone-200/60 bg-white p-2 hover:border-gold/40 hover:shadow-xl transition-all duration-300"
               >
                 {/* Image */}
                 <div className="relative overflow-hidden rounded-md">

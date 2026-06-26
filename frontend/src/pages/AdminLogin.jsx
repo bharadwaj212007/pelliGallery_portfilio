@@ -50,7 +50,7 @@ export const AdminLogin = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto px-6 pt-40 pb-24 flex flex-col justify-center min-h-[80vh]">
+    <div className="max-w-md mx-auto px-6 pt-24 sm:pt-40 pb-24 flex flex-col justify-center min-h-[80vh]">
       <div className="bg-white border border-stone-200 p-8 rounded-xl shadow-xl relative text-left">
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gold" />
         

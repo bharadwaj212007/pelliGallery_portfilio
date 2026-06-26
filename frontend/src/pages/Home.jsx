@@ -7,13 +7,13 @@ export const Home = () => {
     {
       name: 'Weddings',
       desc: 'Eternal vows and traditional celebrations captured in all their grandeur.',
-      image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80',
+      image: 'https://images.unsplash.com/photo-1610030469668-93535c17b6b3?auto=format&fit=crop&w=600&q=80',
       slug: 'weddings'
     },
     {
       name: 'Pre-Wedding Shoots',
       desc: 'Cinematic, candid romance in scenic locations around Hyderabad.',
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80',
+      image: 'https://images.unsplash.com/photo-1510076857177-7470076d4098?auto=format&fit=crop&w=600&q=80',
       slug: 'pre-wedding'
     },
     {
@@ -64,10 +64,10 @@ export const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-luxury-bg via-luxury-black/30 to-luxury-black/80" />
 
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto space-y-6 flex flex-col items-center">
-          <span className="text-xs md:text-sm tracking-[0.4em] text-gold uppercase font-semibold animate-fade-in-slow">
+          <span className="text-[10px] sm:text-xs md:text-sm tracking-[0.25em] sm:tracking-[0.4em] text-gold uppercase font-semibold animate-fade-in-slow">
             CAPTURING YOUR FOREVER STORIES
           </span>
-          <h1 className="text-4xl md:text-7xl font-serif text-white tracking-wider leading-tight uppercase max-w-3xl animate-slide-up">
+          <h1 className="text-3xl sm:text-4xl md:text-7xl font-serif text-white tracking-wider leading-tight uppercase max-w-3xl animate-slide-up">
             TELLING WEDDING TALES, BEAUTIFULLY
           </h1>
           <p className="text-sm md:text-base text-stone-300 font-sans max-w-xl leading-relaxed animate-fade-in font-light">
@@ -101,9 +101,9 @@ export const Home = () => {
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           </div>
-          <div className="absolute bottom-10 left-10 z-20 bg-luxury-black/95 backdrop-blur-md px-6 py-4 rounded border border-white/10 text-left shadow-lg">
-            <span className="font-serif text-lg text-gold block font-semibold">Est. 2018</span>
-            <span className="text-[9px] text-stone-400 uppercase tracking-widest block font-medium">Hyderabad's Premier Visual Storytellers</span>
+          <div className="absolute bottom-4 left-4 sm:bottom-10 sm:left-10 z-20 bg-luxury-black/95 backdrop-blur-md px-4 py-3 sm:px-6 sm:py-4 rounded border border-white/10 text-left shadow-lg max-w-[calc(100%-2rem)]">
+            <span className="font-serif text-sm sm:text-lg text-gold block font-semibold">Est. 2018</span>
+            <span className="text-[8px] sm:text-[9px] text-stone-400 uppercase tracking-widest block font-medium">Hyderabad's Premier Visual Storytellers</span>
           </div>
         </div>
 
@@ -121,18 +121,18 @@ export const Home = () => {
           <p className="text-stone-500 leading-relaxed text-xs md:text-sm font-light">
             We operate beyond standard poses. Our professionals weave themselves seamlessly into your festivities, ensuring the tears, the giggles, and the energetic steps are frozen in visual poetry.
           </p>
-          <div className="grid grid-cols-3 gap-6 pt-4 text-center border-t border-stone-200">
+          <div className="grid grid-cols-3 gap-2 sm:gap-6 pt-4 text-center border-t border-stone-200">
             <div className="space-y-1">
-              <span className="text-2xl font-serif text-gold block font-bold">200+</span>
-              <span className="text-[10px] text-stone-500 uppercase tracking-wider block font-semibold">Couples Welcomed</span>
+              <span className="text-lg sm:text-2xl font-serif text-gold block font-bold">200+</span>
+              <span className="text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-wider block font-semibold">Couples Welcomed</span>
             </div>
-            <div className="border-x border-stone-200 px-4 space-y-1">
-              <span className="text-2xl font-serif text-gold block font-bold">5+ Yrs</span>
-              <span className="text-[10px] text-stone-500 uppercase tracking-wider block font-semibold">Experience</span>
+            <div className="border-x border-stone-200 px-1 sm:px-4 space-y-1">
+              <span className="text-lg sm:text-2xl font-serif text-gold block font-bold">5+ Yrs</span>
+              <span className="text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-wider block font-semibold">Experience</span>
             </div>
             <div className="space-y-1">
-              <span className="text-2xl font-serif text-gold block font-bold">4.9/5</span>
-              <span className="text-[10px] text-stone-500 uppercase tracking-wider block font-semibold">Google Review</span>
+              <span className="text-lg sm:text-2xl font-serif text-gold block font-bold">4.9/5</span>
+              <span className="text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-wider block font-semibold">Google Review</span>
             </div>
           </div>
         </div>

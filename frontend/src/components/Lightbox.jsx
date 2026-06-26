@@ -74,9 +74,9 @@ export const Lightbox = ({ images, currentIndex, onClose, onNavigate }) => {
         {/* Previous Button */}
         <button 
           onClick={handlePrev}
-          className="absolute left-2 md:left-4 z-10 text-stone-400 hover:text-gold transition-all p-3 bg-luxury-black/60 border border-white/5 hover:border-gold/30 rounded-full hover:scale-105"
+          className="absolute left-2 md:left-4 z-10 text-stone-400 hover:text-gold transition-all p-2.5 sm:p-3 bg-luxury-black/60 border border-white/5 hover:border-gold/30 rounded-full hover:scale-105"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-5 h-5 sm:w-6 h-6" />
         </button>
 
         {/* Selected Image */}
@@ -94,9 +94,9 @@ export const Lightbox = ({ images, currentIndex, onClose, onNavigate }) => {
         {/* Next Button */}
         <button 
           onClick={handleNext}
-          className="absolute right-2 md:right-4 z-10 text-stone-400 hover:text-gold transition-all p-3 bg-luxury-black/60 border border-white/5 hover:border-gold/30 rounded-full hover:scale-105"
+          className="absolute right-2 md:right-4 z-10 text-stone-400 hover:text-gold transition-all p-2.5 sm:p-3 bg-luxury-black/60 border border-white/5 hover:border-gold/30 rounded-full hover:scale-105"
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-5 h-5 sm:w-6 h-6" />
         </button>
       </div>
 

@@ -366,10 +366,10 @@ export const AdminGallery = () => {
                           <button
                             onClick={() => moveImage(index, -1)}
                             disabled={index === 0}
-                            className="p-1 hover:bg-stone-100 rounded border border-stone-200 text-stone-500 hover:text-gold transition-colors disabled:opacity-20 cursor-pointer"
+                            className="p-2 hover:bg-stone-100 rounded border border-stone-200 text-stone-500 hover:text-gold transition-colors disabled:opacity-20 cursor-pointer"
                             title="Move Up"
                           >
-                            <ArrowUp className="w-3.5 h-3.5" />
+                            <ArrowUp className="w-4 h-4" />
                           </button>
                           <span className="w-6 font-semibold font-sans text-stone-700 text-xs">
                             {img.sort_order}
@@ -377,10 +377,10 @@ export const AdminGallery = () => {
                           <button
                             onClick={() => moveImage(index, 1)}
                             disabled={index === images.length - 1}
-                            className="p-1 hover:bg-stone-100 rounded border border-stone-200 text-stone-500 hover:text-gold transition-colors disabled:opacity-20 cursor-pointer"
+                            className="p-2 hover:bg-stone-100 rounded border border-stone-200 text-stone-500 hover:text-gold transition-colors disabled:opacity-20 cursor-pointer"
                             title="Move Down"
                           >
-                            <ArrowDown className="w-3.5 h-3.5" />
+                            <ArrowDown className="w-4 h-4" />
                           </button>
                         </div>
                       </td>

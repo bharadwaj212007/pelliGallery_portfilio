@@ -136,7 +136,7 @@ export const AdminDashboard = () => {
                 {/* 3 Metrics Cards Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   {/* Total Bookings */}
-                  <div className="bg-white border border-stone-200 p-6 rounded-xl shadow-md relative overflow-hidden flex flex-col justify-between aspect-[1.8/1] text-left">
+                  <div className="bg-white border border-stone-200 p-6 rounded-xl shadow-md relative overflow-hidden flex flex-col justify-between h-auto py-6 md:aspect-[1.8/1] text-left">
                     <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-gold" />
                     <div className="flex justify-between items-start pl-2">
                       <span className="text-[9px] tracking-widest text-stone-500 uppercase font-semibold">Total Inquiries</span>
@@ -146,7 +146,7 @@ export const AdminDashboard = () => {
                   </div>
 
                   {/* Total Packages */}
-                  <div className="bg-white border border-stone-200 p-6 rounded-xl shadow-md relative overflow-hidden flex flex-col justify-between aspect-[1.8/1] text-left">
+                  <div className="bg-white border border-stone-200 p-6 rounded-xl shadow-md relative overflow-hidden flex flex-col justify-between h-auto py-6 md:aspect-[1.8/1] text-left">
                     <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-gold" />
                     <div className="flex justify-between items-start pl-2">
                       <span className="text-[9px] tracking-widest text-stone-500 uppercase font-semibold">Active Services</span>
@@ -156,7 +156,7 @@ export const AdminDashboard = () => {
                   </div>
 
                   {/* Total Images */}
-                  <div className="bg-white border border-stone-200 p-6 rounded-xl shadow-md relative overflow-hidden flex flex-col justify-between aspect-[1.8/1] text-left">
+                  <div className="bg-white border border-stone-200 p-6 rounded-xl shadow-md relative overflow-hidden flex flex-col justify-between h-auto py-6 md:aspect-[1.8/1] text-left">
                     <div className="absolute top-0 bottom-0 left-0 w-1.5 bg-gold" />
                     <div className="flex justify-between items-start pl-2">
                       <span className="text-[9px] tracking-widest text-stone-500 uppercase font-semibold">Gallery Frames</span>
@@ -221,7 +221,7 @@ export const AdminDashboard = () => {
                     {!stats?.recentImages || stats.recentImages.length === 0 ? (
                       <p className="text-stone-400 text-xs font-light py-4">No portfolio images uploaded yet.</p>
                     ) : (
-                      <div className="grid grid-cols-5 gap-3">
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                         {stats?.recentImages?.map((img) => (
                           <div key={img.id} className="relative aspect-square rounded-md overflow-hidden border border-stone-200 group bg-luxury-bg" title={img.title || 'Portfolio'}>
                             <img 

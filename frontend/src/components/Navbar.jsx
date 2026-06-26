@@ -55,16 +55,16 @@ export const Navbar = () => {
     <>
       {/* Main Header */}
       <nav className={`fixed top-0 left-0 right-0 z-40 py-4 px-6 md:px-12 flex justify-between items-center transition-all duration-500 border-b ${
-        isScrolled 
+        isScrolled || location.pathname !== '/'
           ? 'bg-luxury-black/95 backdrop-blur-md border-white/5 py-3 shadow-lg shadow-black/20 text-luxury-cream' 
           : 'bg-transparent border-transparent text-white'
       }`}>
         {/* Brand Logo */}
         <Link to="/" className="flex flex-col items-center">
-          <span className="font-serif text-2xl tracking-widest text-luxury-cream">
+          <span className="font-serif text-xl sm:text-2xl tracking-widest text-luxury-cream">
             PELLIPUSTHAKAM
           </span>
-          <span className="text-[9px] tracking-[0.25em] text-gold-400 -mt-1 font-sans uppercase">
+          <span className="text-[8px] sm:text-[9px] tracking-[0.2em] sm:tracking-[0.25em] text-gold-400 -mt-1 font-sans uppercase">
             Photography · Hyderabad
           </span>
         </Link>
@@ -138,7 +138,7 @@ export const Navbar = () => {
 
       {/* Mobile Drawer Menu */}
       {isOpen && (
-        <div className="fixed inset-0 z-30 bg-luxury-black/95 backdrop-blur-lg flex flex-col justify-center items-center space-y-8 text-lg uppercase tracking-[0.25em] md:hidden animate-fade-in text-stone-250">
+        <div className="fixed inset-0 z-30 bg-luxury-black/95 backdrop-blur-lg flex flex-col justify-center items-center space-y-8 text-lg uppercase tracking-[0.25em] md:hidden animate-fade-in text-stone-300 overflow-y-auto max-h-screen py-20">
           <Link to="/" onClick={() => setIsOpen(false)} className={`transition-colors py-2 ${location.pathname === '/' ? 'text-gold font-semibold' : 'text-stone-300'}`}>Home</Link>
           <Link to="/portfolio" onClick={() => setIsOpen(false)} className={`transition-colors py-2 ${location.pathname === '/portfolio' ? 'text-gold font-semibold' : 'text-stone-300'}`}>Portfolio</Link>
           <Link to="/services" onClick={() => setIsOpen(false)} className={`transition-colors py-2 ${location.pathname === '/services' ? 'text-gold font-semibold' : 'text-stone-300'}`}>Services</Link>
@@ -154,7 +154,7 @@ export const Navbar = () => {
               </button>
             </>
           ) : (
-            <Link to="/admin/login" onClick={() => setIsOpen(false)} className={`text-stone-500 transition-colors py-2 ${location.pathname === '/admin/login' ? 'text-gold font-semibold' : ''}`}>Admin Login</Link>
+            <Link to="/admin/login" onClick={() => setIsOpen(false)} className={`transition-colors py-2 ${location.pathname === '/admin/login' ? 'text-gold font-semibold' : 'text-stone-300'}`}>Admin Login</Link>
           )}
         </div>
       )}
@@ -168,7 +168,7 @@ export const Navbar = () => {
             onClick={() => setIsCartOpen(false)}
           />
 
-          <div className="absolute inset-y-0 right-0 pl-10 max-w-full flex">
+          <div className="absolute inset-y-0 right-0 pl-0 sm:pl-10 max-w-full flex">
             {/* Drawer Panel */}
             <div className="w-screen max-w-md bg-luxury-black border-l border-white/5 flex flex-col text-white shadow-2xl animate-fade-in">
               <div className="px-6 py-6 border-b border-white/5 flex items-center justify-between">

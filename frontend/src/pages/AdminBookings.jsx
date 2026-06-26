@@ -227,15 +227,15 @@ export const AdminBookings = () => {
 
       {/* Details Dialog Modal */}
       {selectedBooking && (
-        <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center p-4 md:p-10 animate-fade-in">
           {/* Overlay */}
           <div
-            className="absolute inset-0 bg-luxury-black/60 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-luxury-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setSelectedBooking(null)}
           />
 
           {/* Modal box */}
-          <div className="w-full max-w-xl bg-white border border-stone-200 flex flex-col text-stone-700 shadow-2xl rounded-xl relative overflow-hidden text-left p-6 md:p-8 animate-slide-up">
+          <div className="w-full max-w-xl bg-white border border-stone-200 flex flex-col text-stone-700 shadow-2xl rounded-xl relative overflow-hidden text-left p-6 md:p-8 animate-slide-up my-auto">
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gold" />
 
             {/* Header */}
