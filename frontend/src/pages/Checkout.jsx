@@ -80,8 +80,11 @@ export const Checkout = () => {
       const selectedDate = new Date(form.event_date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      const year = selectedDate.getFullYear();
       if (selectedDate < today) {
         tempErrors.event_date = 'Event date must be in the future.';
+      } else if (year < 2020 || year > 2099) {
+        tempErrors.event_date = 'Please provide a valid year (2020-2099).';
       }
     }
 

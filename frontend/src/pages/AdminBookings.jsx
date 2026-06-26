@@ -20,6 +20,7 @@ export const AdminBookings = () => {
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null);
 
   // Search & Filter controls state
   const [search, setSearch] = useState('');
@@ -30,9 +31,9 @@ export const AdminBookings = () => {
 
   const [toast, setToast] = useState(null);
 
-  const fetchBookings = async () => {
+  const fetchBookings = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const queryParams = new URLSearchParams();
       if (search.trim()) queryParams.append('search', search.trim());
       if (status) queryParams.append('status', status);
@@ -52,7 +53,7 @@ export const AdminBookings = () => {
     } catch (err) {
       console.error('Failed to load bookings:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -67,6 +68,7 @@ export const AdminBookings = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
+      setUpdatingId(id);
       const response = await fetch(`${apiUrl}/bookings/${id}/status`, {
         method: 'PUT',
         headers: {
@@ -93,10 +95,12 @@ export const AdminBookings = () => {
         setSelectedBooking(prev => ({ ...prev, status: newStatus }));
       }
 
-      // Refresh list from backend database
-      await fetchBookings();
+      // Refresh list from backend database silently
+      await fetchBookings(true);
     } catch (err) {
       setToast({ message: err.message, type: 'error' });
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -191,20 +195,24 @@ export const AdminBookings = () => {
                     </td>
 
                     {/* Status selection trigger */}
-                    <td className="py-4 text-center">
-                      <select
-                        value={b.status}
-                        onChange={(e) => handleStatusChange(b.id, e.target.value)}
-                        className={`text-[9px] font-bold tracking-widest uppercase border rounded-[3px] px-3 py-1 focus:outline-none bg-white cursor-pointer ${
-                          b.status === 'Confirmed' ? 'border-emerald-200 text-emerald-600' :
-                          b.status === 'Cancelled' ? 'border-rose-200 text-rose-500' :
-                          'border-gold/30 text-gold bg-gold/5'
-                        }`}
-                      >
-                        <option value="Pending" className="text-gold">Pending</option>
-                        <option value="Confirmed" className="text-emerald-600">Confirmed</option>
-                        <option value="Cancelled" className="text-rose-500">Cancelled</option>
-                      </select>
+                    <td className="py-4 text-center font-sans">
+                      <div className="flex items-center justify-center gap-1.5">
+                        {updatingId === b.id && <Loader2 className="w-3 h-3 animate-spin text-gold shrink-0" />}
+                        <select
+                          disabled={updatingId === b.id}
+                          value={b.status}
+                          onChange={(e) => handleStatusChange(b.id, e.target.value)}
+                          className={`text-[9px] font-bold tracking-widest uppercase border rounded-[3px] px-3 py-1 focus:outline-none bg-white cursor-pointer disabled:opacity-50 ${
+                            b.status === 'Confirmed' ? 'border-emerald-200 text-emerald-600 bg-emerald-50/20' :
+                            b.status === 'Cancelled' ? 'border-rose-200 text-rose-500 bg-rose-50/20' :
+                            'border-gold/30 text-gold bg-gold/5'
+                          }`}
+                        >
+                          <option value="Pending" disabled={b.status !== 'Pending'} className="text-gold bg-zinc-900">Pending</option>
+                          <option value="Confirmed" disabled={b.status === 'Cancelled'} className="text-emerald-650 bg-zinc-900">Confirmed</option>
+                          <option value="Cancelled" className="text-rose-500 bg-zinc-900">Cancelled</option>
+                        </select>
+                      </div>
                     </td>
 
                     {/* View Details modal launch */}
@@ -322,19 +330,23 @@ export const AdminBookings = () => {
               <div className="border-t border-stone-150 pt-4 flex justify-between items-center text-xs">
                 <div>
                   <span className="text-[9px] text-stone-400 uppercase block font-semibold tracking-wider">Booking Status</span>
-                  <select
-                    value={selectedBooking.status}
-                    onChange={(e) => handleStatusChange(selectedBooking.id, e.target.value)}
-                    className={`text-[9px] font-bold tracking-widest uppercase border rounded-[3px] px-3 py-1 mt-1 focus:outline-none bg-white cursor-pointer ${
-                      selectedBooking.status === 'Confirmed' ? 'border-emerald-200 text-emerald-600 bg-emerald-50/20' :
-                      selectedBooking.status === 'Cancelled' ? 'border-rose-200 text-rose-500 bg-rose-50/20' :
-                      'border-gold/30 text-gold bg-gold/5'
-                    }`}
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Confirmed">Confirmed</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
+                  <div className="flex items-center gap-1.5 mt-1 font-sans">
+                    {updatingId === selectedBooking.id && <Loader2 className="w-3 h-3 animate-spin text-gold shrink-0" />}
+                    <select
+                      disabled={updatingId === selectedBooking.id}
+                      value={selectedBooking.status}
+                      onChange={(e) => handleStatusChange(selectedBooking.id, e.target.value)}
+                      className={`text-[9px] font-bold tracking-widest uppercase border rounded-[3px] px-3 py-1 focus:outline-none bg-white cursor-pointer disabled:opacity-50 ${
+                        selectedBooking.status === 'Confirmed' ? 'border-emerald-200 text-emerald-600 bg-emerald-50/20' :
+                        selectedBooking.status === 'Cancelled' ? 'border-rose-200 text-rose-500 bg-rose-50/20' :
+                        'border-gold/30 text-gold bg-gold/5'
+                      }`}
+                    >
+                      <option value="Pending" disabled={selectedBooking.status !== 'Pending'}>Pending</option>
+                      <option value="Confirmed" disabled={selectedBooking.status === 'Cancelled'}>Confirmed</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="text-right">
                   <span className="text-[9px] text-stone-400 uppercase block font-semibold text-right tracking-wider">Investment Total</span>

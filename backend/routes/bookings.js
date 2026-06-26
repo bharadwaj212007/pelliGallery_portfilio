@@ -3,7 +3,11 @@ import mongoose from 'mongoose';
 import { verifyToken } from '../middleware/auth.js';
 import Booking from '../models/Booking.js';
 import Package from '../models/Package.js';
-import transporter from '../config/email.js';
+import {
+  sendCustomerBookingReceivedEmail,
+  sendAdminBookingReceivedEmail,
+  sendCustomerBookingStatusChangedEmail
+} from '../services/mailService.js';
 
 const router = express.Router();
 
@@ -35,6 +39,26 @@ router.post('/', async (req, res) => {
     ) {
       return res.status(400).json({
         error: 'Valid email required.'
+      });
+    }
+
+    if (!event_date) {
+      return res.status(400).json({
+        error: 'Event date required.'
+      });
+    }
+
+    const parsedDate = new Date(event_date);
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({
+        error: 'Invalid event date format.'
+      });
+    }
+
+    const year = parsedDate.getFullYear();
+    if (year < 2020 || year > 2099) {
+      return res.status(400).json({
+        error: 'Event date year must be between 2020 and 2099.'
       });
     }
 
@@ -145,88 +169,10 @@ router.post('/', async (req, res) => {
     );
 
     // =======================
-    // CUSTOMER EMAIL
+    // ASYNC EMAILS (Background)
     // =======================
-    try {
-      const info =
-        await transporter.sendMail(
-          {
-            from:
-              process.env
-                .EMAIL_USER,
-            to: customer_email,
-            subject:
-              'PelliGallery Booking Confirmation',
-            html: `
-              <h2>Thank you for booking with Pellipusthakam Photography</h2>
-
-              <p>Dear ${customer_name},</p>
-
-              <p>Your booking has been received successfully.</p>
-
-              <p><b>Event Date:</b> ${event_date}</p>
-              <p><b>Location:</b> ${event_location}</p>
-              <p><b>Total Amount:</b> ₹${total}</p>
-
-              <br>
-
-              <p>Our team will contact you shortly.</p>
-
-              <br>
-
-              <p>Pellipusthakam Photography Team</p>
-            `
-          }
-        );
-
-      console.log(
-        '✅ Customer email sent:',
-        info.messageId
-      );
-    } catch (err) {
-      console.error(
-        '❌ Customer email failed:',
-        err.message
-      );
-    }
-
-    // =======================
-    // ADMIN EMAIL
-    // =======================
-    try {
-      const info =
-        await transporter.sendMail(
-          {
-            from:
-              process.env
-                .EMAIL_USER,
-            to:
-              process.env
-                .EMAIL_USER,
-            subject:
-              'New Booking Received',
-            html: `
-              <h2>New Booking Received</h2>
-
-              <p><b>Name:</b> ${customer_name}</p>
-              <p><b>Email:</b> ${customer_email}</p>
-              <p><b>Date:</b> ${event_date}</p>
-              <p><b>Location:</b> ${event_location}</p>
-              <p><b>Total:</b> ₹${total}</p>
-            `
-          }
-        );
-
-      console.log(
-        '✅ Admin email sent:',
-        info.messageId
-      );
-    } catch (err) {
-      console.error(
-        '❌ Admin email failed:',
-        err.message
-      );
-    }
+    sendCustomerBookingReceivedEmail(booking).catch(err => console.error('Background customer email failed:', err));
+    sendAdminBookingReceivedEmail(booking).catch(err => console.error('Background admin email failed:', err));
 
     res.status(201).json({
       success: true,
@@ -280,6 +226,18 @@ router.put(
     try {
       const { status } = req.body;
 
+      if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({
+          error: 'Invalid booking ID format.'
+        });
+      }
+
+      if (!['Pending', 'Confirmed', 'Cancelled'].includes(status)) {
+        return res.status(400).json({
+          error: 'Invalid status value.'
+        });
+      }
+
       const booking = await Booking.findById(req.params.id);
 
       if (!booking) {
@@ -288,65 +246,25 @@ router.put(
         });
       }
 
-      booking.status = status;
-      await booking.save({ validateBeforeSave: false });
-
-      // Send email notifications
-      if (status === 'Confirmed' || status === 'Cancelled') {
-        try {
-          let mailOptions = {};
-          if (status === 'Confirmed') {
-            mailOptions = {
-              from: process.env.EMAIL_USER,
-              to: booking.customer_email,
-              subject: 'PelliGallery Booking Confirmed',
-              text: `Dear ${booking.customer_name},
-
-We are delighted to inform you that your photography booking has been CONFIRMED.
-
-Booking Details:
-Event Date: ${booking.event_date}
-Location: ${booking.event_location}
-Booking Status: Confirmed
-
-Our team will contact you shortly regarding further arrangements.
-
-Thank you for choosing Pellipusthakam Photography.
-
-Warm Regards,
-PelliGallery Team
-Hyderabad`
-            };
-          } else if (status === 'Cancelled') {
-            mailOptions = {
-              from: process.env.EMAIL_USER,
-              to: booking.customer_email,
-              subject: 'PelliGallery Booking Status Update',
-              text: `Dear ${booking.customer_name},
-
-We regret to inform you that your booking has been marked as CANCELLED.
-
-Booking Details:
-Event Date: ${booking.event_date}
-Location: ${booking.event_location}
-Booking Status: Cancelled
-
-If this was unexpected, please contact our team for assistance.
-
-Thank you for choosing Pellipusthakam Photography.
-
-Warm Regards,
-PelliGallery Team
-Hyderabad`
-            };
-          }
-
-          const info = await transporter.sendMail(mailOptions);
-          console.log(`✅ Status email sent for booking ${booking._id}: ${info.messageId}`);
-        } catch (emailErr) {
-          console.error(`❌ Status email failed for booking ${booking._id}:`, emailErr.message);
-        }
+      // Check status flow constraints
+      if (booking.status === 'Confirmed' && status === 'Pending') {
+        return res.status(400).json({
+          error: 'Cannot change status from Confirmed back to Pending.'
+        });
       }
+      if (booking.status === 'Cancelled' && status !== 'Cancelled') {
+        return res.status(400).json({
+          error: 'Cannot change status of a Cancelled booking.'
+        });
+      }
+
+      booking.status = status;
+      await booking.save();
+
+      // =======================
+      // ASYNC STATUS EMAIL (Background)
+      // =======================
+      sendCustomerBookingStatusChangedEmail(booking, status).catch(err => console.error('Background status email failed:', err));
 
       res.json({
         success: true,

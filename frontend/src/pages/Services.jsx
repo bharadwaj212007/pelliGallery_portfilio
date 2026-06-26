@@ -29,7 +29,7 @@ const serviceImages = {
   'Wedding Photography': 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80&fm=webp',
   'Pre-Wedding Shoot': 'https://images.unsplash.com/photo-1510076857177-7470076d4098?auto=format&fit=crop&w=800&q=80&fm=webp',
   'Engagement Photography': 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=800&q=80&fm=webp',
-  'Reception Photography': 'https://images.unsplash.com/photo-1519225495810-7517c24a2ed7?auto=format&fit=crop&w=800&q=80&fm=webp',
+  'Reception Photography': 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80&fm=webp',
   'Haldi Ceremony': 'https://images.unsplash.com/photo-1595853035070-59a39fe84de3?auto=format&fit=crop&w=800&q=80&fm=webp',
   'Mehendi Photography': 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80&fm=webp',
   'Birthday Photography': 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=800&q=80&fm=webp',
