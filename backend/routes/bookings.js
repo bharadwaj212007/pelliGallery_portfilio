@@ -16,6 +16,7 @@ const router = express.Router();
 // CREATE BOOKING
 // =======================
 router.post('/', async (req, res) => {
+  console.log('✓ Booking received');
   try {
     const {
       customer_name,
@@ -163,10 +164,7 @@ router.post('/', async (req, res) => {
         status: 'Pending'
       });
 
-    console.log(
-      '✅ Booking saved:',
-      booking._id
-    );
+    console.log('✓ Booking saved to MongoDB');
 
     // =======================
     // ASYNC EMAILS (Background)
@@ -199,12 +197,25 @@ router.get(
   verifyToken,
   async (req, res) => {
     try {
-      const bookings =
-        await Booking.find().sort(
-          {
-            createdAt: -1
-          }
-        );
+      const { status, search } = req.query;
+      const query = {};
+
+      if (status) {
+        query.status = status;
+      }
+
+      if (search && search.trim()) {
+        const searchRegex = new RegExp(search.trim(), 'i');
+        query.$or = [
+          { customer_name: searchRegex },
+          { customer_email: searchRegex },
+          { event_location: searchRegex }
+        ];
+      }
+
+      const bookings = await Booking.find(query).sort({
+        createdAt: -1
+      });
 
       res.json(bookings);
     } catch (err) {
