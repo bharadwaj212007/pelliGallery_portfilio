@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Standard API base url. If in development, points to port 5000. In production, points to local origin.
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000/api`;
 
   useEffect(() => {
     const verifyAdminToken = async () => {

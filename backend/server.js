@@ -21,6 +21,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 
 import connectDB from './config/db.js';
+import { verifySMTPConnection } from './services/mailService.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -35,6 +36,9 @@ const PORT = process.env.PORT || 5000;
 
 // Connect MongoDB
 connectDB();
+
+// Verify SMTP Connection
+verifySMTPConnection();
 
 // Middleware
 app.use(
