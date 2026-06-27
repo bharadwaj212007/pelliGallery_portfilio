@@ -3,6 +3,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Verify Environment Variables
+const requiredEnvVars = ['EMAIL_USER', 'EMAIL_PASS', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE'];
+requiredEnvVars.forEach(v => {
+  if (!process.env[v]) {
+    console.error(`❌ Error: Environment variable ${v} is missing!`);
+  }
+});
+
 const user = process.env.SMTP_USER || process.env.EMAIL_USER;
 const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
 const host = process.env.SMTP_HOST || 'smtp.gmail.com';
@@ -31,10 +39,10 @@ export const verifySMTPConnection = async () => {
 
   try {
     await transporter.verify();
-    console.log('✅ SMTP Connection verified successfully. Transporter is ready to send emails.');
+    console.log('✓ SMTP Connected');
     return true;
   } catch (err) {
-    console.error('❌ SMTP Connection verification failed:');
+    console.error('❌ SMTP Connection Failed');
     console.error(err.message);
     console.error(err.stack);
     return false;
@@ -57,7 +65,7 @@ export const sendEmailWithRetry = async (mailOptions, attempt = 1) => {
       return sendEmailWithRetry(mailOptions, 2);
     }
     console.error('❌ Email send failed after retry.');
-    return null;
+    throw err;
   }
 };
 
@@ -142,6 +150,7 @@ export const sendCustomerBookingReceivedEmail = async (booking) => {
     console.error('Error in sendCustomerBookingReceivedEmail:');
     console.error(err.message);
     console.error(err.stack);
+    throw err;
   }
 };
 
@@ -174,6 +183,7 @@ export const sendAdminBookingReceivedEmail = async (booking) => {
     console.error('Error in sendAdminBookingReceivedEmail:');
     console.error(err.message);
     console.error(err.stack);
+    throw err;
   }
 };
 
@@ -281,6 +291,7 @@ export const sendCustomerBookingStatusChangedEmail = async (booking, status) => 
     console.error('Error in sendCustomerBookingStatusChangedEmail:');
     console.error(err.message);
     console.error(err.stack);
+    throw err;
   }
 };
 

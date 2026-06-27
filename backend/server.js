@@ -21,7 +21,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 
 import connectDB from './config/db.js';
-import { verifySMTPConnection } from './services/mailService.js';
+import { verifySMTPConnection, sendTestEmail } from './services/mailService.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -61,6 +61,17 @@ app.get('/api/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     database_mode: 'MongoDB Atlas'
   });
+});
+
+// Test Email Route
+app.post('/api/test-email', async (req, res) => {
+  try {
+    await sendTestEmail(process.env.EMAIL_USER);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ Test email route failed:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // Routes
