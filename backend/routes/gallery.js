@@ -9,26 +9,41 @@ const router = express.Router();
 
 // Get Categories
 router.get('/categories', async (req, res) => {
+  console.log(`\n[API AUDIT] Received GET ${req.originalUrl}`);
   try {
-    const dbCategories = await GalleryCategory.find();
+    const queryFilter = {};
+    console.log(`[API AUDIT] Executing MongoDB Query on GalleryCategory: find(${JSON.stringify(queryFilter)})`);
+    const dbCategories = await GalleryCategory.find(queryFilter);
+    console.log(`[API AUDIT] Database Name: ${GalleryCategory.db.name}`);
+    console.log(`[API AUDIT] Collection Name: ${GalleryCategory.collection.name}`);
+    console.log(`[API AUDIT] Documents Returned: ${dbCategories.length}`);
+    
     // Map to match the frontend expectations: id, name, slug
     const formatted = dbCategories.map(cat => ({
       id: cat._id.toString(),
       name: cat.name,
       slug: cat.slug
     }));
+    console.log(`[API AUDIT] Final JSON response sent: ${JSON.stringify(formatted).substring(0, 300)}...`);
     res.json(formatted);
   } catch (err) {
+    console.error(`[API AUDIT] Error in GET /categories:`, err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
 // Get Gallery Images
 router.get('/', async (req, res) => {
+  console.log(`\n[API AUDIT] Received GET ${req.originalUrl}`);
   try {
-    const dbImages = await GalleryImage.find()
+    const queryFilter = {};
+    console.log(`[API AUDIT] Executing MongoDB Query on GalleryImage: find(${JSON.stringify(queryFilter)}).populate('category_id')`);
+    const dbImages = await GalleryImage.find(queryFilter)
       .populate('category_id')
       .sort({ sort_order: 1, createdAt: 1 });
+    console.log(`[API AUDIT] Database Name: ${GalleryImage.db.name}`);
+    console.log(`[API AUDIT] Collection Name: ${GalleryImage.collection.name}`);
+    console.log(`[API AUDIT] Documents Returned: ${dbImages.length}`);
 
     // Map to match the frontend expectations: id, title, imageUrl, image_url, public_id, category_id, category_name, category_slug, sort_order
     const formatted = dbImages.map(img => {
@@ -47,8 +62,10 @@ router.get('/', async (req, res) => {
         category_slug: categorySlug
       };
     });
+    console.log(`[API AUDIT] Final JSON response sent: [${formatted.length} items] (Sample: ${JSON.stringify(formatted[0] || {}).substring(0, 300)}...)`);
     res.json(formatted);
   } catch (err) {
+    console.error(`[API AUDIT] Error in GET /:`, err.message);
     res.status(500).json({ error: err.message });
   }
 });
