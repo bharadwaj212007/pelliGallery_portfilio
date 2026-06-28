@@ -65,7 +65,7 @@ app.get('/api/health', (req, res) => {
 // Test Email Route (GET and POST - Requirement 10)
 const testEmailHandler = async (req, res) => {
   try {
-    const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'STUDIO_EMAIL'];
+    const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
     const missingVars = requiredEnvVars.filter(v => !process.env[v]);
     if (missingVars.length > 0) {
       console.warn(`⚠️ Warning: Missing required SMTP environment variables: ${missingVars.join(', ')}`);

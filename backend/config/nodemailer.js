@@ -13,11 +13,18 @@ if (process.env.RENDER) {
 }
 console.log('================================');
 
-// Verify required environment variables (Requirement 3)
-const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'STUDIO_EMAIL'];
+// Verify required environment variables (Requirement 3 & new instruction)
+const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
 const missingVars = requiredEnvVars.filter(v => !process.env[v]);
 if (missingVars.length > 0) {
   console.warn(`⚠️ Warning: Missing required SMTP environment variables: ${missingVars.join(', ')}`);
+}
+
+// SMTP_FROM optional fallback and logging (Requirement 1, 5)
+const FROM_EMAIL = process.env.SMTP_FROM || process.env.SMTP_USER;
+if (!process.env.SMTP_FROM) {
+  console.log('SMTP_FROM not configured.');
+  console.log('Using SMTP_USER as sender.');
 }
 
 // Brevo Fallback Transporter configuration (Requirement 14)
@@ -132,7 +139,7 @@ export const sendBookingEmail = async (bookingDetails, packagesList) => {
 
   try {
     await transporter.sendMail({
-      from: `"${bookingDetails.customer_name} via PelliGallery" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      from: `"PelliGallery" <${FROM_EMAIL}>`,
       to: process.env.STUDIO_EMAIL || 'pellipusthakamphotography@gmail.com',
       subject: mailSubject,
       html: mailBodyHtml,
@@ -146,3 +153,4 @@ export const sendBookingEmail = async (bookingDetails, packagesList) => {
 };
 
 export default transporter;
+export { FROM_EMAIL };

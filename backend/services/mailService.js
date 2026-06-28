@@ -1,56 +1,10 @@
 import dotenv from 'dotenv';
-import transporter from '../config/nodemailer.js';
+import transporter, { FROM_EMAIL } from '../config/nodemailer.js';
 
 dotenv.config();
 
-const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'STUDIO_EMAIL'];
-
-const getFromEmail = () => process.env.SMTP_FROM || process.env.SMTP_USER;
-
-// Verification function (called at startup or endpoint)
-export const verifySMTPConnection = async (attempt = 1) => {
-  const currentMissing = requiredEnvVars.filter(v => !process.env[v]);
-  if (currentMissing.length > 0) {
-    console.error(`❌ SMTP Connection Verification aborted: missing variables: ${currentMissing.join(', ')}`);
-    return false;
-  }
-
-  console.log(`SMTP connection started (Attempt ${attempt}/3)`);
-  try {
-    await transporter.verify();
-    console.log('SMTP verified');
-    return true;
-  } catch (error) {
-    console.error(`❌ SMTP Connection Failed (Attempt ${attempt}/3):`);
-    console.error(error);
-    if (error.code) console.error('Error Code:', error.code);
-    if (error.command) console.error('Error Command:', error.command);
-    if (error.response) console.error('Error Response:', error.response);
-    if (error.stack) console.error('Error Stack:', error.stack);
-
-    // Explain exactly why Render is timing out while localhost works (Requirement 13 & 14)
-    if (process.env.SMTP_HOST?.includes('gmail') || transporter.options.host?.includes('gmail')) {
-      console.warn(`
-        💡 Gmail Troubleshooting Advice:
-        If Gmail blocks the connection or times out (Connection timeout / ETIMEDOUT / CONN):
-        1. App Password: Make sure you are using a 16-character App Password, NOT your regular password.
-        2. 2-Step Verification: Ensure 2-Step Verification is enabled on your Google Account to generate App Passwords.
-        3. SMTP environment variables: Verify that host, port, secure, and user are correctly defined.
-        4. Firewall/Timeout: Outbound SMTP ports (25, 465, 587) are blocked by default on Render's hosting environment to prevent spam.
-        
-        If Gmail SMTP repeatedly times out on Render, we highly recommend switching to Brevo SMTP.
-        You can enable the Brevo SMTP configuration simply by setting SMTP_PROVIDER=brevo in your Render environment variables.
-      `);
-    }
-
-    if (attempt < 3) {
-      console.log(`🔄 Retrying SMTP connection (Attempt ${attempt + 1}/3) in 2 seconds...`);
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      return verifySMTPConnection(attempt + 1);
-    }
-    return false;
-  }
-};
+// Only these variables should be mandatory (Requirement 2)
+const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
 
 // Reusable send function with verification and retry (Requirement 5, 9, 15)
 export const sendEmailWithRetry = async (mailOptions, attempt = 1) => {
@@ -64,7 +18,7 @@ export const sendEmailWithRetry = async (mailOptions, attempt = 1) => {
   // 15. Log SMTP Verify Started
   console.log('SMTP Verify Started');
   try {
-    // 5. Verify SMTP Connection before sending
+    // 5. Verify SMTP Connection before sending (does not abort if SMTP_FROM is missing)
     await transporter.verify();
     console.log('SMTP Verified');
   } catch (error) {
@@ -116,6 +70,50 @@ export const sendEmailWithRetry = async (mailOptions, attempt = 1) => {
       return sendEmailWithRetry(mailOptions, attempt + 1);
     }
     throw err;
+  }
+};
+
+// Verification function (called at startup or test endpoint)
+export const verifySMTPConnection = async (attempt = 1) => {
+  const currentMissing = requiredEnvVars.filter(v => !process.env[v]);
+  if (currentMissing.length > 0) {
+    console.error(`❌ SMTP Connection Verification aborted: missing variables: ${currentMissing.join(', ')}`);
+    return false;
+  }
+
+  console.log(`SMTP connection started (Attempt ${attempt}/3)`);
+  try {
+    await transporter.verify();
+    console.log('SMTP verified');
+    return true;
+  } catch (error) {
+    console.error(`❌ SMTP Connection Failed (Attempt ${attempt}/3):`);
+    console.error(error);
+    if (error.code) console.error('Error Code:', error.code);
+    if (error.command) console.error('Error Command:', error.command);
+    if (error.response) console.error('Error Response:', error.response);
+    if (error.stack) console.error('Error Stack:', error.stack);
+
+    if (process.env.SMTP_HOST?.includes('gmail') || transporter.options.host?.includes('gmail')) {
+      console.warn(`
+        💡 Gmail Troubleshooting Advice:
+        If Gmail blocks the connection or times out (Connection timeout / ETIMEDOUT / CONN):
+        1. App Password: Make sure you are using a 16-character App Password, NOT your regular password.
+        2. 2-Step Verification: Ensure 2-Step Verification is enabled on your Google Account to generate App Passwords.
+        3. SMTP environment variables: Verify that host, port, secure, and user are correctly defined.
+        4. Firewall/Timeout: Outbound SMTP ports (25, 465, 587) are blocked by default on Render's hosting environment to prevent spam.
+        
+        If Gmail SMTP repeatedly times out on Render, we highly recommend switching to Brevo SMTP.
+        You can enable the Brevo SMTP configuration simply by setting SMTP_PROVIDER=brevo in your Render environment variables.
+      `);
+    }
+
+    if (attempt < 3) {
+      console.log(`🔄 Retrying SMTP connection (Attempt ${attempt + 1}/3) in 2 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return verifySMTPConnection(attempt + 1);
+    }
+    return false;
   }
 };
 
@@ -182,7 +180,7 @@ export const sendCustomerBookingReceivedEmail = async (booking) => {
   `;
 
   const mailOptions = {
-    from: `"Pellipusthakam Photography" <${getFromEmail()}>`,
+    from: `"PelliGallery" <${FROM_EMAIL}>`,
     to: booking.customer_email,
     subject: 'Booking Confirmation - Pellipusthakam Photography',
     text: `Hello ${booking.customer_name},\n\nThank you for choosing Pellipusthakam Photography. Your booking has been successfully received.\n\nBooking ID: ${booking._id || booking.id}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}\n\nOur team will review your request and contact you shortly.`,
@@ -203,8 +201,8 @@ export const sendAdminBookingReceivedEmail = async (booking) => {
   const formattedPrice = parseFloat(booking.total_price).toLocaleString('en-IN');
 
   const mailOptions = {
-    from: `"PelliGallery System" <${getFromEmail()}>`,
-    to: process.env.STUDIO_EMAIL || getFromEmail(), // Send to STUDIO_EMAIL (Requirement 8)
+    from: `"PelliGallery" <${FROM_EMAIL}>`,
+    to: process.env.STUDIO_EMAIL || FROM_EMAIL, // Send to STUDIO_EMAIL (Requirement 8)
     subject: `New Booking Received from ${booking.customer_name}`,
     text: `New Booking Received\n\nCustomer Name: ${booking.customer_name}\nEmail: ${booking.customer_email}\nPhone: ${customer_phone}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}\nEvent Date: ${booking.event_date}\nLocation: ${booking.event_location}\nBooking ID: ${booking._id || booking.id}`
   };
@@ -273,7 +271,7 @@ export const sendCustomerBookingStatusChangedEmail = async (booking, status) => 
     `;
 
     mailOptions = {
-      from: `"Pellipusthakam Photography" <${getFromEmail()}>`,
+      from: `"PelliGallery" <${FROM_EMAIL}>`,
       to: booking.customer_email,
       subject: 'Booking Confirmed - Pellipusthakam Photography',
       text: `Hello ${booking.customer_name},\n\nYour booking has been confirmed successfully.\n\nEvent: ${booking.event_location}\nDate: ${formattedDate}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}`,
@@ -302,7 +300,7 @@ export const sendCustomerBookingStatusChangedEmail = async (booking, status) => 
     `;
 
     mailOptions = {
-      from: `"Pellipusthakam Photography" <${getFromEmail()}>`,
+      from: `"PelliGallery" <${FROM_EMAIL}>`,
       to: booking.customer_email,
       subject: 'Booking Cancelled - Pellipusthakam Photography',
       text: `Hello ${booking.customer_name},\n\nYour booking reference #${booking._id || booking.id} has been cancelled. Please contact us for more information.`,
@@ -316,7 +314,7 @@ export const sendCustomerBookingStatusChangedEmail = async (booking, status) => 
 // Send simple test email
 export const sendTestEmail = async (toEmail) => {
   const mailOptions = {
-    from: getFromEmail(),
+    from: `"PelliGallery" <${FROM_EMAIL}>`,
     to: toEmail,
     subject: 'PelliGallery Test Email Connection',
     text: 'SMTP setup test succeeded.'
