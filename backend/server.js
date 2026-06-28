@@ -65,18 +65,21 @@ app.get('/api/health', (req, res) => {
 // Test Email Route (GET and POST - Requirement 10)
 const testEmailHandler = async (req, res) => {
   try {
-    const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
-    const missingVars = requiredEnvVars.filter(v => !process.env[v]);
-    if (missingVars.length > 0) {
-      console.warn(`⚠️ Warning: Missing required SMTP environment variables: ${missingVars.join(', ')}`);
-      return res.status(400).json({
-        success: false,
-        error: `Missing required environment variables: ${missingVars.join(', ')}`
-      });
+    if (!process.env.BREVO_API_KEY) {
+      const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
+      const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+      if (missingVars.length > 0) {
+        console.warn(`⚠️ Warning: Missing required SMTP environment variables: ${missingVars.join(', ')}`);
+        return res.status(400).json({
+          success: false,
+          error: `Missing required environment variables: ${missingVars.join(', ')}`
+        });
+      }
     }
 
     await verifySMTPConnection();
-    await sendTestEmail(process.env.SMTP_USER);
+    const testRecipient = process.env.SMTP_USER || process.env.SMTP_FROM || 'pellipusthakamweb@gmail.com';
+    await sendTestEmail(testRecipient);
     res.json({ success: true });
   } catch (err) {
     console.error('❌ Test email route failed:', err.message);

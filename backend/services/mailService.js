@@ -3,7 +3,7 @@ import transporter, { FROM_EMAIL } from '../config/nodemailer.js';
 
 dotenv.config();
 
-// Only these variables should be mandatory (Requirement 2)
+// Only these variables should be mandatory for SMTP
 const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
 
 // Step 11: Auto detect SMTP error cause
@@ -22,7 +22,7 @@ const detectSMTPErrorCause = (error) => {
   } else if (msg.includes('auth') || msg.includes('login') || msg.includes('username') || msg.includes('password') || code === 'eauth') {
     console.log('Detected Issue: Authentication Error / Wrong Credentials / App Password missing');
     console.log('Explanation: The SMTP server rejected your login username or password.');
-    if (transporter.options.host?.includes('gmail')) {
+    if (transporter && transporter.options.host?.includes('gmail')) {
       console.log('Gmail Specific: If you are using Gmail SMTP, you must enable 2-Step Verification on your Google Account and generate a 16-character App Password. Your standard Gmail account password will NOT work.');
     }
   } else if (msg.includes('tls') || msg.includes('ssl') || msg.includes('starttls') || msg.includes('secure')) {
@@ -43,7 +43,57 @@ const detectSMTPErrorCause = (error) => {
   console.log('=======================================');
 };
 
-// Reusable send function with verification retry (Requirement 5, 9, 15)
+// Send email using Brevo HTTP API (Requirement 2, 5)
+const sendViaBrevoAPI = async ({ toEmail, toName, subject, htmlContent, textContent }) => {
+  const url = 'https://api.brevo.com/v3/smtp/email';
+  const apiKey = process.env.BREVO_API_KEY;
+
+  const payload = {
+    sender: {
+      name: 'PelliGallery',
+      email: FROM_EMAIL
+    },
+    to: [
+      {
+        email: toEmail,
+        name: toName || toEmail
+      }
+    ],
+    subject: subject,
+    htmlContent: htmlContent
+  };
+
+  if (textContent) {
+    payload.textContent = textContent;
+  }
+
+  console.log(`Sending HTTPS request to Brevo API for recipient: ${toEmail}`);
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': apiKey,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const responseText = await response.text();
+  console.log(`Brevo API Response Status: ${response.status}`);
+  console.log(`Brevo API Response Body: ${responseText}`);
+
+  if (!response.ok) {
+    const err = new Error(`Brevo API returned status ${response.status}: ${responseText}`);
+    err.code = 'BREVO_API_ERROR';
+    err.responseCode = response.status;
+    err.response = responseText;
+    throw err;
+  }
+
+  return responseText;
+};
+
+// Reusable send function with verification retry (Gmail SMTP fallback)
 export const sendEmailWithRetry = async (mailOptions, attempt = 1) => {
   const currentMissing = requiredEnvVars.filter(v => !process.env[v]);
   if (currentMissing.length > 0) {
@@ -54,7 +104,6 @@ export const sendEmailWithRetry = async (mailOptions, attempt = 1) => {
 
   console.log('SMTP Verify Started');
   try {
-    // Verify SMTP connection (with 30 seconds timeout race)
     await verifySMTPConnection();
     console.log('SMTP Verified');
   } catch (error) {
@@ -73,7 +122,6 @@ export const sendEmailWithRetry = async (mailOptions, attempt = 1) => {
     throw error;
   }
 
-  // Send the email
   try {
     const info = await transporter.sendMail(mailOptions);
     return info;
@@ -96,6 +144,12 @@ export const sendEmailWithRetry = async (mailOptions, attempt = 1) => {
 
 // Verification function (with 30 seconds timeout - Step 3, 4, 7)
 export const verifySMTPConnection = async (attempt = 1) => {
+  // Bypassing verification on Render if Brevo HTTP API is configured (Requirement 7)
+  if (process.env.BREVO_API_KEY) {
+    console.log('✉️ Bypassing SMTP verification: BREVO_API_KEY is configured for HTTPS delivery.');
+    return true;
+  }
+
   const currentMissing = requiredEnvVars.filter(v => !process.env[v]);
   if (currentMissing.length > 0) {
     console.error(`❌ SMTP Connection Verification aborted: missing variables: ${currentMissing.join(', ')}`);
@@ -103,7 +157,6 @@ export const verifySMTPConnection = async (attempt = 1) => {
   }
 
   try {
-    // 30s timeout promise race (Step 7)
     await new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         console.log('SMTP verification timeout');
@@ -136,7 +189,6 @@ export const verifySMTPConnection = async (attempt = 1) => {
     if (error.responseCode) console.error('Error Response Code:', error.responseCode);
     if (error.stack) console.error('Error Stack:', error.stack);
 
-    // Auto-detect error reasons (Step 11)
     detectSMTPErrorCause(error);
 
     if (attempt < 3) {
@@ -211,15 +263,32 @@ export const sendCustomerBookingReceivedEmail = async (booking) => {
       </div>
     `;
 
-    const mailOptions = {
-      from: `"PelliGallery" <${FROM_EMAIL}>`,
-      to: booking.customer_email,
-      subject: 'Booking Confirmation - Pellipusthakam Photography',
-      text: `Hello ${booking.customer_name},\n\nThank you for choosing Pellipusthakam Photography. Your booking has been successfully received.\n\nBooking ID: ${booking._id || booking.id}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}\n\nOur team will review your request and contact you shortly.`,
-      html: htmlBody
-    };
+    const textBody = `Hello ${booking.customer_name},\n\nThank you for choosing Pellipusthakam Photography. Your booking has been successfully received.\n\nBooking ID: ${booking._id || booking.id}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}\n\nOur team will review your request and contact you shortly.`;
+    const subject = 'Booking Confirmation - Pellipusthakam Photography';
+    const toEmail = booking.customer_email;
 
-    const info = await sendEmailWithRetry(mailOptions);
+    let info;
+    if (process.env.BREVO_API_KEY) {
+      console.log('Using Brevo HTTPS API for customer confirmation email');
+      info = await sendViaBrevoAPI({
+        toEmail,
+        toName: booking.customer_name,
+        subject,
+        htmlContent: htmlBody,
+        textContent: textBody
+      });
+    } else {
+      console.log('Using SMTP transporter for customer confirmation email');
+      const mailOptions = {
+        from: `"PelliGallery" <${FROM_EMAIL}>`,
+        to: toEmail,
+        subject,
+        text: textBody,
+        html: htmlBody
+      };
+      info = await sendEmailWithRetry(mailOptions);
+    }
+
     console.log('Customer Email Sent');
     return info;
   } catch (err) {
@@ -246,14 +315,31 @@ export const sendAdminBookingReceivedEmail = async (booking) => {
     const packagesStr = booking.items.map(i => i.package_name).join(', ');
     const formattedPrice = parseFloat(booking.total_price).toLocaleString('en-IN');
 
-    const mailOptions = {
-      from: `"PelliGallery" <${FROM_EMAIL}>`,
-      to: process.env.STUDIO_EMAIL || FROM_EMAIL, // Send to STUDIO_EMAIL
-      subject: `New Booking Received from ${booking.customer_name}`,
-      text: `New Booking Received\n\nCustomer Name: ${booking.customer_name}\nEmail: ${booking.customer_email}\nPhone: ${customer_phone}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}\nEvent Date: ${booking.event_date}\nLocation: ${booking.event_location}\nBooking ID: ${booking._id || booking.id}`
-    };
+    const subject = `New Booking Received from ${booking.customer_name}`;
+    const textBody = `New Booking Received\n\nCustomer Name: ${booking.customer_name}\nEmail: ${booking.customer_email}\nPhone: ${customer_phone}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}\nEvent Date: ${booking.event_date}\nLocation: ${booking.event_location}\nBooking ID: ${booking._id || booking.id}`;
+    const toEmail = process.env.STUDIO_EMAIL || FROM_EMAIL;
 
-    const info = await sendEmailWithRetry(mailOptions);
+    let info;
+    if (process.env.BREVO_API_KEY) {
+      console.log('Using Brevo HTTPS API for admin notification email');
+      info = await sendViaBrevoAPI({
+        toEmail,
+        toName: 'Studio Admin',
+        subject,
+        htmlContent: `<pre>${textBody}</pre>`,
+        textContent: textBody
+      });
+    } else {
+      console.log('Using SMTP transporter for admin notification email');
+      const mailOptions = {
+        from: `"PelliGallery" <${FROM_EMAIL}>`,
+        to: toEmail,
+        subject,
+        text: textBody
+      };
+      info = await sendEmailWithRetry(mailOptions);
+    }
+
     console.log('Studio Email Sent');
     return info;
   } catch (err) {
@@ -276,10 +362,15 @@ export const sendCustomerBookingStatusChangedEmail = async (booking, status) => 
   const formattedPrice = parseFloat(booking.total_price).toLocaleString('en-IN');
   const formattedDate = new Date(booking.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
-  let mailOptions = {};
+  let subject = '';
+  let htmlContent = '';
+  let textContent = '';
+  const toEmail = booking.customer_email;
 
   if (status === 'Confirmed') {
-    const htmlBody = `
+    subject = 'Booking Confirmed - Pellipusthakam Photography';
+    textContent = `Hello ${booking.customer_name},\n\nYour booking has been confirmed successfully.\n\nEvent: ${booking.event_location}\nDate: ${formattedDate}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}`;
+    htmlContent = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
         <div style="background-color: #1a1a1a; padding: 24px; text-align: center; border-bottom: 3px solid #D4AF37;">
           <h1 style="color: #FAF9F6; margin: 0; font-family: 'Georgia', serif; font-size: 24px; letter-spacing: 2px;">Pellipusthakam Photography</h1>
@@ -327,16 +418,10 @@ export const sendCustomerBookingStatusChangedEmail = async (booking, status) => 
         </div>
       </div>
     `;
-
-    mailOptions = {
-      from: `"PelliGallery" <${FROM_EMAIL}>`,
-      to: booking.customer_email,
-      subject: 'Booking Confirmed - Pellipusthakam Photography',
-      text: `Hello ${booking.customer_name},\n\nYour booking has been confirmed successfully.\n\nEvent: ${booking.event_location}\nDate: ${formattedDate}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}`,
-      html: htmlBody
-    };
   } else if (status === 'Cancelled') {
-    const htmlBody = `
+    subject = 'Booking Cancelled - Pellipusthakam Photography';
+    textContent = `Hello ${booking.customer_name},\n\nYour booking reference #${booking._id || booking.id} has been cancelled. Please contact us for more information.`;
+    htmlContent = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
         <div style="background-color: #1a1a1a; padding: 24px; text-align: center; border-bottom: 3px solid #D4AF37;">
           <h1 style="color: #FAF9F6; margin: 0; font-family: 'Georgia', serif; font-size: 24px; letter-spacing: 2px;">Pellipusthakam Photography</h1>
@@ -356,26 +441,52 @@ export const sendCustomerBookingStatusChangedEmail = async (booking, status) => 
         </div>
       </div>
     `;
-
-    mailOptions = {
-      from: `"PelliGallery" <${FROM_EMAIL}>`,
-      to: booking.customer_email,
-      subject: 'Booking Cancelled - Pellipusthakam Photography',
-      text: `Hello ${booking.customer_name},\n\nYour booking reference #${booking._id || booking.id} has been cancelled. Please contact us for more information.`,
-      html: htmlBody
-    };
   }
 
-  return sendEmailWithRetry(mailOptions);
+  if (process.env.BREVO_API_KEY) {
+    console.log(`Using Brevo HTTPS API for status update email (${status})`);
+    return sendViaBrevoAPI({
+      toEmail,
+      toName: booking.customer_name,
+      subject,
+      htmlContent,
+      textContent
+    });
+  } else {
+    console.log(`Using SMTP transporter for status update email (${status})`);
+    const mailOptions = {
+      from: `"PelliGallery" <${FROM_EMAIL}>`,
+      to: toEmail,
+      subject,
+      text: textContent,
+      html: htmlContent
+    };
+    return sendEmailWithRetry(mailOptions);
+  }
 };
 
 // Send simple test email
 export const sendTestEmail = async (toEmail) => {
-  const mailOptions = {
-    from: `"PelliGallery" <${FROM_EMAIL}>`,
-    to: toEmail,
-    subject: 'PelliGallery Test Email Connection',
-    text: 'SMTP setup test succeeded.'
-  };
-  return sendEmailWithRetry(mailOptions);
+  const subject = 'PelliGallery Test Email Connection';
+  const textBody = 'SMTP/HTTPS setup test succeeded.';
+  
+  if (process.env.BREVO_API_KEY) {
+    console.log('Using Brevo HTTPS API for test email');
+    return sendViaBrevoAPI({
+      toEmail,
+      toName: 'Test Recipient',
+      subject,
+      htmlContent: `<p>${textBody}</p>`,
+      textContent: textBody
+    });
+  } else {
+    console.log('Using SMTP transporter for test email');
+    const mailOptions = {
+      from: `"PelliGallery" <${FROM_EMAIL}>`,
+      to: toEmail,
+      subject,
+      text: textBody
+    };
+    return sendEmailWithRetry(mailOptions);
+  }
 };

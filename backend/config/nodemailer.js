@@ -8,68 +8,69 @@ console.log('SMTP Secure:', process.env.SMTP_SECURE || 'Not Configured');
 console.log('SMTP User:', process.env.SMTP_USER || 'Not Configured');
 console.log('SMTP From:', process.env.SMTP_FROM || 'Not Configured');
 console.log('Studio Email:', process.env.STUDIO_EMAIL || 'Not Configured');
+console.log('Brevo API Key Loaded:', !!process.env.BREVO_API_KEY);
 if (process.env.RENDER) {
   console.log('Running on Render Production');
 }
 console.log('================================');
 
-// Verify required environment variables
-const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
-const missingVars = requiredEnvVars.filter(v => !process.env[v]);
-if (missingVars.length > 0) {
-  console.warn(`⚠️ Warning: Missing required SMTP environment variables: ${missingVars.join(', ')}`);
-}
+const FROM_EMAIL = process.env.SMTP_FROM || process.env.SMTP_USER || 'pellipusthakamweb@gmail.com';
+let transporter = null;
 
-// SMTP_FROM optional fallback and logging
-const FROM_EMAIL = process.env.SMTP_FROM || process.env.SMTP_USER;
-if (!process.env.SMTP_FROM) {
-  console.log('SMTP_FROM not configured.');
-  console.log('Using SMTP_USER as sender.');
-}
+if (process.env.BREVO_API_KEY) {
+  console.log('✉️ Brevo HTTPS API Key detected. Bypassing SMTP transporter initialization.');
+} else {
+  // Verify required environment variables
+  const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
+  const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+  if (missingVars.length > 0) {
+    console.warn(`⚠️ Warning: Missing required SMTP environment variables: ${missingVars.join(', ')}`);
+  }
 
-// Brevo Fallback Transporter configuration (Requirement 12)
-const useBrevo = process.env.SMTP_PROVIDER === 'brevo' || !!process.env.BREVO_SMTP_HOST;
-const host = useBrevo ? (process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com') : process.env.SMTP_HOST;
-const port = Number(useBrevo ? (process.env.BREVO_SMTP_PORT || '587') : process.env.SMTP_PORT);
-const secure = useBrevo ? (process.env.BREVO_SMTP_SECURE === 'true') : (process.env.SMTP_SECURE === 'true');
-const user = useBrevo ? process.env.BREVO_SMTP_USER : process.env.SMTP_USER;
-const pass = useBrevo ? process.env.BREVO_SMTP_PASS : process.env.SMTP_PASS;
+  // SMTP_FROM optional fallback and logging
+  if (!process.env.SMTP_FROM) {
+    console.log('SMTP_FROM not configured.');
+    console.log('Using SMTP_USER as sender.');
+  }
 
-// Step 2: Transporter settings
-const transporterOptions = {
-  host,
-  port,
-  secure,
-  requireTLS: !secure, // mandate requireTLS: !secure
-  auth: {
-    user,
-    pass,
-  },
-  pool: true,
-  maxConnections: 5,
-  maxMessages: 100,
-  connectionTimeout: 120000,
-  greetingTimeout: 120000,
-  socketTimeout: 120000,
-  tls: {
-    rejectUnauthorized: false,
-  },
-  logger: true,
-  debug: true,
-};
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(process.env.SMTP_PORT || '587');
+  const secure = process.env.SMTP_SECURE === 'true';
 
-// Log transporter configuration (except password)
-const loggedConfig = { ...transporterOptions };
-if (loggedConfig.auth) {
-  loggedConfig.auth = {
-    user: loggedConfig.auth.user,
-    pass: loggedConfig.auth.pass ? '[LOADED]' : '[MISSING]'
+  const transporterOptions = {
+    host,
+    port,
+    secure,
+    requireTLS: !secure,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
+    connectionTimeout: 120000,
+    greetingTimeout: 120000,
+    socketTimeout: 120000,
+    tls: {
+      rejectUnauthorized: false,
+    },
+    logger: true,
+    debug: true,
   };
-}
-console.log("Centralized Nodemailer Transporter Options (nodemailer.js):", JSON.stringify(loggedConfig, null, 2));
 
-const transporter = nodemailer.createTransport(transporterOptions);
-console.log('Nodemailer SMTP service initialized successfully.');
+  const loggedConfig = { ...transporterOptions };
+  if (loggedConfig.auth) {
+    loggedConfig.auth = {
+      user: loggedConfig.auth.user,
+      pass: loggedConfig.auth.pass ? '[LOADED]' : '[MISSING]'
+    };
+  }
+  console.log("Centralized Nodemailer Transporter Options (nodemailer.js):", JSON.stringify(loggedConfig, null, 2));
+
+  transporter = nodemailer.createTransport(transporterOptions);
+  console.log('Nodemailer SMTP service initialized successfully.');
+}
 
 export const sendBookingEmail = async (bookingDetails, packagesList) => {
   const mailSubject = `New Wedding Booking Inquiry - ${bookingDetails.customer_name}`;
@@ -134,18 +135,47 @@ export const sendBookingEmail = async (bookingDetails, packagesList) => {
     </div>
   `;
 
-  try {
-    await transporter.sendMail({
-      from: `"PelliGallery" <${FROM_EMAIL}>`,
-      to: process.env.STUDIO_EMAIL || 'pellipusthakamphotography@gmail.com',
-      subject: mailSubject,
-      html: mailBodyHtml,
-    });
-    console.log('Notification email successfully sent to studio.');
-    return true;
-  } catch (err) {
-    console.error('Error sending booking confirmation email:', err.message);
-    return false;
+  const toEmail = process.env.STUDIO_EMAIL || 'pellipusthakamphotography@gmail.com';
+
+  if (process.env.BREVO_API_KEY) {
+    try {
+      console.log('Using Brevo HTTPS API in sendBookingEmail');
+      const payload = {
+        sender: { name: 'PelliGallery', email: FROM_EMAIL },
+        to: [{ email: toEmail, name: 'Studio' }],
+        subject: mailSubject,
+        htmlContent: mailBodyHtml
+      };
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': process.env.BREVO_API_KEY,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const text = await response.text();
+      console.log(`Brevo API Response: ${response.status} - ${text}`);
+      return response.ok;
+    } catch (err) {
+      console.error('Error sending legacy booking email via Brevo API:', err);
+      return false;
+    }
+  } else {
+    try {
+      await transporter.sendMail({
+        from: `"PelliGallery" <${FROM_EMAIL}>`,
+        to: toEmail,
+        subject: mailSubject,
+        html: mailBodyHtml,
+      });
+      console.log('Notification email successfully sent to studio.');
+      return true;
+    } catch (err) {
+      console.error('Error sending booking confirmation email:', err.message);
+      return false;
+    }
   }
 };
 
