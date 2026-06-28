@@ -7,19 +7,45 @@ if (missingVars.length > 0) {
   console.warn(`⚠️ Warning: Missing SMTP environment variables in nodemailer.js: ${missingVars.join(', ')}`);
 }
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587', 10),
-  secure: process.env.SMTP_SECURE === 'true',
-  requireTLS: true,
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
+const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+const port = parseInt(process.env.SMTP_PORT || '587', 10);
+const secure = process.env.SMTP_SECURE === 'true'; // Convert SMTP_SECURE correctly from env string to boolean
+const user = process.env.SMTP_USER;
+const pass = process.env.SMTP_PASS;
+
+const transporterOptions = {
+  host,
+  port,
+  secure,
+  connectionTimeout: 60000,
+  greetingTimeout: 60000,
+  socketTimeout: 60000,
+  debug: true,
+  logger: true,
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user,
+    pass,
   },
-});
+};
+
+// Option A vs Option B setup:
+// Option A: host: smtp.gmail.com, port: 587, secure: false, requireTLS: true
+// Option B: host: smtp.gmail.com, port: 465, secure: true
+if (!secure) {
+  transporterOptions.requireTLS = true;
+}
+
+// Log the complete transporter configuration except the password
+const loggedConfig = { ...transporterOptions };
+if (loggedConfig.auth) {
+  loggedConfig.auth = {
+    user: loggedConfig.auth.user,
+    pass: loggedConfig.auth.pass ? '[LOADED]' : '[MISSING]'
+  };
+}
+console.log("Nodemailer Transporter Configuration (nodemailer.js):", JSON.stringify(loggedConfig, null, 2));
+
+const transporter = nodemailer.createTransport(transporterOptions);
 console.log('Nodemailer SMTP service initialized successfully.');
 
 export const sendBookingEmail = async (bookingDetails, packagesList) => {

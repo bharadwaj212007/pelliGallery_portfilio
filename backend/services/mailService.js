@@ -25,23 +25,43 @@ const getTransporter = () => {
 
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587', 10);
-  const secure = process.env.SMTP_SECURE === 'true'; // false for 587
+  const secure = process.env.SMTP_SECURE === 'true'; // Convert SMTP_SECURE correctly from env string to boolean
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
-  transporter = nodemailer.createTransport({
+  const transporterOptions = {
     host,
     port,
     secure,
-    requireTLS: true,
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
+    connectionTimeout: 60000,
+    greetingTimeout: 60000,
+    socketTimeout: 60000,
+    debug: true,
+    logger: true,
     auth: {
       user,
       pass
     }
-  });
+  };
+
+  // Option A vs Option B setup:
+  // Option A: host: smtp.gmail.com, port: 587, secure: false, requireTLS: true
+  // Option B: host: smtp.gmail.com, port: 465, secure: true
+  if (!secure) {
+    transporterOptions.requireTLS = true;
+  }
+
+  // Log the complete transporter configuration except the password
+  const loggedConfig = { ...transporterOptions };
+  if (loggedConfig.auth) {
+    loggedConfig.auth = {
+      user: loggedConfig.auth.user,
+      pass: loggedConfig.auth.pass ? '[LOADED]' : '[MISSING]'
+    };
+  }
+  console.log("Nodemailer Transporter Configuration:", JSON.stringify(loggedConfig, null, 2));
+
+  transporter = nodemailer.createTransport(transporterOptions);
   return transporter;
 };
 
@@ -65,6 +85,18 @@ export const verifySMTPConnection = async (attempt = 1) => {
     if (error.code) console.error('Error Code:', error.code);
     if (error.command) console.error('Error Command:', error.command);
     if (error.response) console.error('Error Response:', error.response);
+
+    // Explain exactly why Render is timing out while localhost works
+    console.warn(`
+      💡 Troubleshooting Suggestion:
+      Gmail SMTP connections frequently time out on cloud platforms like Render because outgoing SMTP ports (25, 465, 587) are blocked by default on their hosting environment to prevent spam. 
+      Localhost works because your local ISP does not block these outgoing ports.
+      
+      To resolve this, we suggest switching to a dedicated transactional email provider designed for cloud deployments, such as:
+      1. Brevo (formerly Sendinblue) - Supports non-blocked ports (like 587, 2525) and offers a free tier.
+      2. Resend - Excellent developer experience, using API/HTTP or SMTP with port 587/465.
+      3. SendGrid or Mailgun.
+    `);
 
     if (attempt < 3) {
       console.log(`🔄 Retrying SMTP connection (Attempt ${attempt + 1}/3) in 2 seconds...`);
