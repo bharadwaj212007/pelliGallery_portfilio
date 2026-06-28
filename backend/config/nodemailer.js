@@ -1,41 +1,60 @@
 import nodemailer from 'nodemailer';
 
-// Verify Environment Variables (Warn, do not crash immediately at startup)
-const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
+// Startup Logging (Requirement 11 & 12)
+console.log('=== SMTP CONFIGURATION AUDIT ===');
+console.log('SMTP Host:', process.env.SMTP_HOST || 'Not Configured');
+console.log('SMTP Port:', process.env.SMTP_PORT || 'Not Configured');
+console.log('SMTP Secure:', process.env.SMTP_SECURE || 'Not Configured');
+console.log('SMTP User:', process.env.SMTP_USER || 'Not Configured');
+console.log('SMTP From:', process.env.SMTP_FROM || 'Not Configured');
+console.log('Studio Email:', process.env.STUDIO_EMAIL || 'Not Configured');
+if (process.env.RENDER) {
+  console.log('Running on Render Production');
+}
+console.log('================================');
+
+// Verify required environment variables (Requirement 3)
+const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'STUDIO_EMAIL'];
 const missingVars = requiredEnvVars.filter(v => !process.env[v]);
 if (missingVars.length > 0) {
-  console.warn(`⚠️ Warning: Missing SMTP environment variables in nodemailer.js: ${missingVars.join(', ')}`);
+  console.warn(`⚠️ Warning: Missing required SMTP environment variables: ${missingVars.join(', ')}`);
 }
 
-const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-const port = parseInt(process.env.SMTP_PORT || '587', 10);
-const secure = process.env.SMTP_SECURE === 'true'; // Convert SMTP_SECURE correctly from env string to boolean
-const user = process.env.SMTP_USER;
-const pass = process.env.SMTP_PASS;
+// Brevo Fallback Transporter configuration (Requirement 14)
+const useBrevo = process.env.SMTP_PROVIDER === 'brevo' || !!process.env.BREVO_SMTP_HOST;
+const host = useBrevo ? (process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com') : process.env.SMTP_HOST;
+const port = Number(useBrevo ? (process.env.BREVO_SMTP_PORT || '587') : process.env.SMTP_PORT);
+const secure = useBrevo ? (process.env.BREVO_SMTP_SECURE === 'true') : (process.env.SMTP_SECURE === 'true');
+const user = useBrevo ? process.env.BREVO_SMTP_USER : process.env.SMTP_USER;
+const pass = useBrevo ? process.env.BREVO_SMTP_PASS : process.env.SMTP_PASS;
 
 const transporterOptions = {
   host,
   port,
   secure,
-  connectionTimeout: 60000,
-  greetingTimeout: 60000,
-  socketTimeout: 60000,
-  debug: true,
-  logger: true,
   auth: {
     user,
     pass,
   },
+  connectionTimeout: 120000,
+  greetingTimeout: 120000,
+  socketTimeout: 120000,
+  pool: true,
+  maxConnections: 5,
+  maxMessages: 100,
+  tls: {
+    rejectUnauthorized: false,
+  },
+  logger: true,
+  debug: true,
 };
 
-// Option A vs Option B setup:
-// Option A: host: smtp.gmail.com, port: 587, secure: false, requireTLS: true
-// Option B: host: smtp.gmail.com, port: 465, secure: true
+// Gmail STARTTLS Compatibility (Requirement 13)
 if (!secure) {
   transporterOptions.requireTLS = true;
 }
 
-// Log the complete transporter configuration except the password
+// Log transporter configuration (except password)
 const loggedConfig = { ...transporterOptions };
 if (loggedConfig.auth) {
   loggedConfig.auth = {
@@ -43,7 +62,7 @@ if (loggedConfig.auth) {
     pass: loggedConfig.auth.pass ? '[LOADED]' : '[MISSING]'
   };
 }
-console.log("Nodemailer Transporter Configuration (nodemailer.js):", JSON.stringify(loggedConfig, null, 2));
+console.log("Centralized Nodemailer Transporter Options (nodemailer.js):", JSON.stringify(loggedConfig, null, 2));
 
 const transporter = nodemailer.createTransport(transporterOptions);
 console.log('Nodemailer SMTP service initialized successfully.');
@@ -111,27 +130,18 @@ export const sendBookingEmail = async (bookingDetails, packagesList) => {
     </div>
   `;
 
-  if (transporter) {
-    try {
-      await transporter.sendMail({
-        from: `"${bookingDetails.customer_name} via PelliGallery" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
-        to: process.env.STUDIO_EMAIL || 'pellipusthakamphotography@gmail.com',
-        subject: mailSubject,
-        html: mailBodyHtml,
-      });
-      console.log('Notification email successfully sent to studio.');
-      return true;
-    } catch (err) {
-      console.error('Error sending booking confirmation email:', err.message);
-      return false;
-    }
-  } else {
-    console.log('\n--- SIMULATED BOOKING EMAIL SENT ---');
-    console.log(`To: ${process.env.STUDIO_EMAIL || 'pellipusthakamphotography@gmail.com'}`);
-    console.log(`Subject: ${mailSubject}`);
-    console.log(`Content HTML:\n${mailBodyHtml}`);
-    console.log('------------------------------------\n');
+  try {
+    await transporter.sendMail({
+      from: `"${bookingDetails.customer_name} via PelliGallery" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      to: process.env.STUDIO_EMAIL || 'pellipusthakamphotography@gmail.com',
+      subject: mailSubject,
+      html: mailBodyHtml,
+    });
+    console.log('Notification email successfully sent to studio.');
     return true;
+  } catch (err) {
+    console.error('Error sending booking confirmation email:', err.message);
+    return false;
   }
 };
 

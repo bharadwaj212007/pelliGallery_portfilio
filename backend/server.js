@@ -62,16 +62,30 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Test Email Route
-app.post('/api/test-email', async (req, res) => {
+// Test Email Route (GET and POST - Requirement 10)
+const testEmailHandler = async (req, res) => {
   try {
-    await sendTestEmail(process.env.EMAIL_USER);
+    const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM', 'STUDIO_EMAIL'];
+    const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+    if (missingVars.length > 0) {
+      console.warn(`⚠️ Warning: Missing required SMTP environment variables: ${missingVars.join(', ')}`);
+      return res.status(400).json({
+        success: false,
+        error: `Missing required environment variables: ${missingVars.join(', ')}`
+      });
+    }
+
+    await verifySMTPConnection();
+    await sendTestEmail(process.env.SMTP_USER);
     res.json({ success: true });
   } catch (err) {
     console.error('❌ Test email route failed:', err.message);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: err.stack || err.message || err });
   }
-});
+};
+
+app.get('/api/test-email', testEmailHandler);
+app.post('/api/test-email', testEmailHandler);
 
 // Routes
 app.use('/api/auth', authRoutes);
