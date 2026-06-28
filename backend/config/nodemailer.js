@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-// Startup Logging (Requirement 11 & 12)
+// Startup Logging (Requirement 10 & 11)
 console.log('=== SMTP CONFIGURATION AUDIT ===');
 console.log('SMTP Host:', process.env.SMTP_HOST || 'Not Configured');
 console.log('SMTP Port:', process.env.SMTP_PORT || 'Not Configured');
@@ -13,21 +13,21 @@ if (process.env.RENDER) {
 }
 console.log('================================');
 
-// Verify required environment variables (Requirement 3 & new instruction)
+// Verify required environment variables
 const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
 const missingVars = requiredEnvVars.filter(v => !process.env[v]);
 if (missingVars.length > 0) {
   console.warn(`⚠️ Warning: Missing required SMTP environment variables: ${missingVars.join(', ')}`);
 }
 
-// SMTP_FROM optional fallback and logging (Requirement 1, 5)
+// SMTP_FROM optional fallback and logging
 const FROM_EMAIL = process.env.SMTP_FROM || process.env.SMTP_USER;
 if (!process.env.SMTP_FROM) {
   console.log('SMTP_FROM not configured.');
   console.log('Using SMTP_USER as sender.');
 }
 
-// Brevo Fallback Transporter configuration (Requirement 14)
+// Brevo Fallback Transporter configuration (Requirement 12)
 const useBrevo = process.env.SMTP_PROVIDER === 'brevo' || !!process.env.BREVO_SMTP_HOST;
 const host = useBrevo ? (process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com') : process.env.SMTP_HOST;
 const port = Number(useBrevo ? (process.env.BREVO_SMTP_PORT || '587') : process.env.SMTP_PORT);
@@ -35,31 +35,28 @@ const secure = useBrevo ? (process.env.BREVO_SMTP_SECURE === 'true') : (process.
 const user = useBrevo ? process.env.BREVO_SMTP_USER : process.env.SMTP_USER;
 const pass = useBrevo ? process.env.BREVO_SMTP_PASS : process.env.SMTP_PASS;
 
+// Step 2: Transporter settings
 const transporterOptions = {
   host,
   port,
   secure,
+  requireTLS: !secure, // mandate requireTLS: !secure
   auth: {
     user,
     pass,
   },
-  connectionTimeout: 120000,
-  greetingTimeout: 120000,
-  socketTimeout: 120000,
   pool: true,
   maxConnections: 5,
   maxMessages: 100,
+  connectionTimeout: 120000,
+  greetingTimeout: 120000,
+  socketTimeout: 120000,
   tls: {
     rejectUnauthorized: false,
   },
   logger: true,
   debug: true,
 };
-
-// Gmail STARTTLS Compatibility (Requirement 13)
-if (!secure) {
-  transporterOptions.requireTLS = true;
-}
 
 // Log transporter configuration (except password)
 const loggedConfig = { ...transporterOptions };

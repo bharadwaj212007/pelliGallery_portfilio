@@ -166,46 +166,31 @@ router.post('/', async (req, res) => {
 
     console.log('✓ Booking saved to MongoDB');
 
-    // =======================
-    // TRY SENDING EMAIL
-    // =======================
-    let emailStatus = true;
-    try {
+    // Return booking success immediately (Requirement 8)
+    res.status(201).json({
+      success: true,
+      message: 'Booking created successfully.',
+      booking
+    });
+
+    // Send emails asynchronously in the background (Requirement 8)
+    (async () => {
       console.log('Booking Created');
       
       // Try sending customer email
       try {
-        console.log('Sending Customer Email');
         await sendCustomerBookingReceivedEmail(booking);
-        console.log('Customer Email Sent');
       } catch (custErr) {
-        console.error('Customer Email Failed:');
-        console.error(custErr.stack || custErr);
-        emailStatus = false;
+        // Log properties are outputted inside sendCustomerBookingReceivedEmail
       }
 
       // Try sending studio email
       try {
-        console.log('Sending Studio Email');
         await sendAdminBookingReceivedEmail(booking);
-        console.log('Studio Email Sent');
       } catch (adminErr) {
-        console.error('Studio Email Failed:');
-        console.error(adminErr.stack || adminErr);
-        emailStatus = false;
+        // Log properties are outputted inside sendAdminBookingReceivedEmail
       }
-    } catch (err) {
-      console.error('Email process encountered an unexpected error:');
-      console.error(err.stack || err);
-      emailStatus = false;
-    }
-
-    res.status(201).json({
-      success: true,
-      message: 'Booking created successfully.',
-      booking,
-      emailStatus
-    });
+    })();
 
   } catch (err) {
     console.error(err);
