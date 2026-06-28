@@ -8,69 +8,64 @@ console.log('SMTP Secure:', process.env.SMTP_SECURE || 'Not Configured');
 console.log('SMTP User:', process.env.SMTP_USER || 'Not Configured');
 console.log('SMTP From:', process.env.SMTP_FROM || 'Not Configured');
 console.log('Studio Email:', process.env.STUDIO_EMAIL || 'Not Configured');
-console.log('Brevo API Key Loaded:', !!process.env.BREVO_API_KEY);
 if (process.env.RENDER) {
   console.log('Running on Render Production');
 }
 console.log('================================');
 
-const FROM_EMAIL = process.env.SMTP_FROM || process.env.SMTP_USER || 'pellipusthakamweb@gmail.com';
-let transporter = null;
-
-if (process.env.BREVO_API_KEY) {
-  console.log('✉️ Brevo HTTPS API Key detected. Bypassing SMTP transporter initialization.');
-} else {
-  // Verify required environment variables
-  const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
-  const missingVars = requiredEnvVars.filter(v => !process.env[v]);
-  if (missingVars.length > 0) {
-    console.warn(`⚠️ Warning: Missing required SMTP environment variables: ${missingVars.join(', ')}`);
-  }
-
-  // SMTP_FROM optional fallback and logging
-  if (!process.env.SMTP_FROM) {
-    console.log('SMTP_FROM not configured.');
-    console.log('Using SMTP_USER as sender.');
-  }
-
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = Number(process.env.SMTP_PORT || '587');
-  const secure = process.env.SMTP_SECURE === 'true';
-
-  const transporterOptions = {
-    host,
-    port,
-    secure,
-    requireTLS: !secure,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 100,
-    connectionTimeout: 120000,
-    greetingTimeout: 120000,
-    socketTimeout: 120000,
-    tls: {
-      rejectUnauthorized: false,
-    },
-    logger: true,
-    debug: true,
-  };
-
-  const loggedConfig = { ...transporterOptions };
-  if (loggedConfig.auth) {
-    loggedConfig.auth = {
-      user: loggedConfig.auth.user,
-      pass: loggedConfig.auth.pass ? '[LOADED]' : '[MISSING]'
-    };
-  }
-  console.log("Centralized Nodemailer Transporter Options (nodemailer.js):", JSON.stringify(loggedConfig, null, 2));
-
-  transporter = nodemailer.createTransport(transporterOptions);
-  console.log('Nodemailer SMTP service initialized successfully.');
+// Verify required environment variables
+const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
+const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+if (missingVars.length > 0) {
+  console.warn(`⚠️ Warning: Missing required SMTP environment variables: ${missingVars.join(', ')}`);
 }
+
+// SMTP_FROM optional fallback and logging
+const FROM_EMAIL = process.env.SMTP_FROM || process.env.SMTP_USER || 'pellipusthakamweb@gmail.com';
+if (!process.env.SMTP_FROM) {
+  console.log('SMTP_FROM not configured.');
+  console.log('Using SMTP_USER as sender.');
+}
+
+const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+const port = Number(process.env.SMTP_PORT || '587');
+const secure = process.env.SMTP_SECURE === 'true';
+
+// Step 2 Transporter Options
+const transporterOptions = {
+  host,
+  port,
+  secure,
+  requireTLS: !secure,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+  pool: true,
+  maxConnections: 5,
+  maxMessages: 100,
+  connectionTimeout: 120000,
+  greetingTimeout: 120000,
+  socketTimeout: 120000,
+  tls: {
+    rejectUnauthorized: false,
+  },
+  logger: true,
+  debug: true,
+};
+
+// Log transporter configuration (except password)
+const loggedConfig = { ...transporterOptions };
+if (loggedConfig.auth) {
+  loggedConfig.auth = {
+    user: loggedConfig.auth.user,
+    pass: loggedConfig.auth.pass ? '[LOADED]' : '[MISSING]'
+  };
+}
+console.log("Centralized Nodemailer Transporter Options (nodemailer.js):", JSON.stringify(loggedConfig, null, 2));
+
+const transporter = nodemailer.createTransport(transporterOptions);
+console.log('Nodemailer SMTP service initialized successfully.');
 
 export const sendBookingEmail = async (bookingDetails, packagesList) => {
   const mailSubject = `New Wedding Booking Inquiry - ${bookingDetails.customer_name}`;
@@ -135,47 +130,18 @@ export const sendBookingEmail = async (bookingDetails, packagesList) => {
     </div>
   `;
 
-  const toEmail = process.env.STUDIO_EMAIL || 'pellipusthakamphotography@gmail.com';
-
-  if (process.env.BREVO_API_KEY) {
-    try {
-      console.log('Using Brevo HTTPS API in sendBookingEmail');
-      const payload = {
-        sender: { name: 'PelliGallery', email: FROM_EMAIL },
-        to: [{ email: toEmail, name: 'Studio' }],
-        subject: mailSubject,
-        htmlContent: mailBodyHtml
-      };
-      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          'accept': 'application/json',
-          'api-key': process.env.BREVO_API_KEY,
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      const text = await response.text();
-      console.log(`Brevo API Response: ${response.status} - ${text}`);
-      return response.ok;
-    } catch (err) {
-      console.error('Error sending legacy booking email via Brevo API:', err);
-      return false;
-    }
-  } else {
-    try {
-      await transporter.sendMail({
-        from: `"PelliGallery" <${FROM_EMAIL}>`,
-        to: toEmail,
-        subject: mailSubject,
-        html: mailBodyHtml,
-      });
-      console.log('Notification email successfully sent to studio.');
-      return true;
-    } catch (err) {
-      console.error('Error sending booking confirmation email:', err.message);
-      return false;
-    }
+  try {
+    await transporter.sendMail({
+      from: `"PelliGallery" <${FROM_EMAIL}>`,
+      to: process.env.STUDIO_EMAIL || 'pellipusthakamphotography@gmail.com',
+      subject: mailSubject,
+      html: mailBodyHtml,
+    });
+    console.log('Notification email successfully sent to studio.');
+    return true;
+  } catch (err) {
+    console.error('Error sending booking confirmation email:', err.message);
+    return false;
   }
 };
 
