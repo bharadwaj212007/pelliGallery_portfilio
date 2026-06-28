@@ -1,5 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import OptimizedImage from './OptimizedImage';
 
 export const Lightbox = ({ images, currentIndex, onClose, onNavigate }) => {
   const [touchStart, setTouchStart] = React.useState(0);
@@ -49,17 +51,20 @@ export const Lightbox = ({ images, currentIndex, onClose, onNavigate }) => {
   if (!activeImage) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-luxury-black/98 backdrop-blur-lg flex flex-col justify-between p-4 md:p-8 animate-fade-in select-none"
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col justify-between p-4 md:p-8 select-none"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      
       {/* Lightbox Header Controls */}
       <div className="flex justify-between items-center w-full z-10 border-b border-white/5 pb-4">
         <div className="text-left font-sans text-[10px] tracking-[0.2em] text-stone-500 uppercase">
-          {currentIndex + 1} / {images.length} — <span className="text-gold font-semibold">{activeImage.category_name || 'Portfolio'}</span>
+          {currentIndex + 1} / {images.length} — <span className="text-gold font-bold">{activeImage.category_name || 'Portfolio'}</span>
         </div>
         <button 
           onClick={onClose}
@@ -74,27 +79,37 @@ export const Lightbox = ({ images, currentIndex, onClose, onNavigate }) => {
         {/* Previous Button */}
         <button 
           onClick={handlePrev}
-          className="absolute left-2 md:left-4 z-10 text-stone-400 hover:text-gold transition-all p-2.5 sm:p-3 bg-luxury-black/60 border border-white/5 hover:border-gold/30 rounded-full hover:scale-105"
+          className="absolute left-2 md:left-4 z-10 text-stone-400 hover:text-gold transition-all p-2.5 sm:p-3 bg-black/60 border border-white/5 hover:border-gold/30 rounded-full hover:scale-105"
         >
           <ChevronLeft className="w-5 h-5 sm:w-6 h-6" />
         </button>
 
-        {/* Selected Image */}
-        <div className="relative max-w-full max-h-full p-2 md:p-4 bg-white/[0.02] border border-white/5 rounded-lg shadow-2xl flex items-center justify-center overflow-hidden">
-          <img 
-            src={activeImage.imageUrl || "/placeholder.jpg"} 
-            alt={activeImage.title || 'Wedding moment'} 
-            className="max-w-full max-h-[65vh] object-contain rounded-md animate-fade-in pointer-events-none"
-            onError={(e) => {
-              e.target.src = "/placeholder.jpg";
-            }}
-          />
+        {/* Selected Image Wrapper with layout animations */}
+        <div className="relative max-w-full max-h-full p-2 md:p-4 bg-white/[0.01] border border-white/5 rounded-2xl shadow-2xl flex items-center justify-center overflow-hidden w-[90%] md:w-[70%] h-[60vh]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeImage.id || currentIndex}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="w-full h-full rounded-xl overflow-hidden flex items-center justify-center"
+            >
+              <OptimizedImage 
+                src={activeImage.imageUrl || activeImage.image_url} 
+                alt={activeImage.title || 'Wedding moment'} 
+                priority={true} // Load instantly in lightbox
+                className="rounded-xl"
+                imgClassName="max-w-full max-h-[55vh] object-contain rounded-xl pointer-events-none"
+              />
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* Next Button */}
         <button 
           onClick={handleNext}
-          className="absolute right-2 md:right-4 z-10 text-stone-400 hover:text-gold transition-all p-2.5 sm:p-3 bg-luxury-black/60 border border-white/5 hover:border-gold/30 rounded-full hover:scale-105"
+          className="absolute right-2 md:right-4 z-10 text-stone-400 hover:text-gold transition-all p-2.5 sm:p-3 bg-black/60 border border-white/5 hover:border-gold/30 rounded-full hover:scale-105"
         >
           <ChevronRight className="w-5 h-5 sm:w-6 h-6" />
         </button>
@@ -102,16 +117,25 @@ export const Lightbox = ({ images, currentIndex, onClose, onNavigate }) => {
 
       {/* Image Info Footer */}
       <div className="w-full text-center max-w-xl mx-auto pb-4 space-y-3">
-        {activeImage.title && (
-          <h3 className="font-serif text-xl tracking-wider text-white leading-tight animate-slide-up">
-            {activeImage.title}
-          </h3>
-        )}
-        <span className="inline-block text-[9px] tracking-[0.2em] text-gold font-sans uppercase border border-gold/30 px-3 py-1 rounded-sm bg-gold/5 font-semibold">
+        <AnimatePresence mode="wait">
+          {activeImage.title && (
+            <motion.h3 
+              key={`title-${currentIndex}`}
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -10, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="font-serif text-xl tracking-wider text-white leading-tight font-semibold"
+            >
+              {activeImage.title}
+            </motion.h3>
+          )}
+        </AnimatePresence>
+        <span className="inline-block text-[9px] tracking-[0.2em] text-gold font-sans uppercase border border-gold/30 px-3 py-1 rounded-sm bg-gold/5 font-bold">
           {activeImage.category_name}
         </span>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

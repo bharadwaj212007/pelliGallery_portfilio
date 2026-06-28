@@ -1,31 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Camera, Calendar, ArrowRight, Heart, Star, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import OptimizedImage from '../components/OptimizedImage';
 
 export const Home = () => {
   const categories = [
     {
       name: 'Weddings',
       desc: 'Eternal vows and traditional celebrations captured in all their grandeur.',
-      image: 'https://images.unsplash.com/photo-1610030469668-93535c17b6b3?auto=format&fit=crop&w=600&q=80',
+      image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
       slug: 'weddings'
     },
     {
       name: 'Pre-Wedding Shoots',
       desc: 'Cinematic, candid romance in scenic locations around Hyderabad.',
-      image: 'https://images.unsplash.com/photo-1510076857177-7470076d4098?auto=format&fit=crop&w=600&q=80',
+      image: 'https://images.unsplash.com/photo-1510076857177-7470076d4098?auto=format&fit=crop&w=800&q=80',
       slug: 'pre-wedding'
     },
     {
       name: 'Birthdays & Anniversaries',
       desc: 'Fun, candid, and memory-making frames for milestones.',
-      image: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=600&q=80',
+      image: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=800&q=80',
       slug: 'birthdays'
     },
     {
       name: 'Corporate Events',
       desc: 'Professional visual logs for galas, launches, and summits.',
-      image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80',
+      image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80',
       slug: 'corporate'
     }
   ];
@@ -46,8 +48,28 @@ export const Home = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Framer Motion variants for staggered elements
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.12,
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    show: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] }
+    }
+  };
+
   return (
-    <div className="space-y-28 pb-24 bg-luxury-bg">
+    <div className="space-y-28 pb-24 bg-luxury-bg overflow-hidden">
       {/* 1. Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-luxury-black">
         {/* Slideshow background layers */}
@@ -64,53 +86,88 @@ export const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-luxury-bg via-luxury-black/30 to-luxury-black/80" />
 
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto space-y-6 flex flex-col items-center">
-          <span className="text-[10px] sm:text-xs md:text-sm tracking-[0.25em] sm:tracking-[0.4em] text-gold uppercase font-semibold animate-fade-in-slow">
+          <motion.span 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="text-[10px] sm:text-xs md:text-sm tracking-[0.25em] sm:tracking-[0.4em] text-gold uppercase font-semibold block"
+          >
             CAPTURING YOUR FOREVER STORIES
-          </span>
-          <h1 className="text-3xl sm:text-4xl md:text-7xl font-serif text-white tracking-wider leading-tight uppercase max-w-3xl animate-slide-up">
+          </motion.span>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="text-3xl sm:text-4xl md:text-7xl font-serif text-white tracking-wider leading-tight uppercase max-w-3xl font-extrabold"
+          >
             TELLING WEDDING TALES, BEAUTIFULLY
-          </h1>
-          <p className="text-sm md:text-base text-stone-300 font-sans max-w-xl leading-relaxed animate-fade-in font-light">
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.8 }}
+            transition={{ duration: 1, delay: 0.4 }}
+            className="text-sm md:text-base text-stone-300 font-sans max-w-xl leading-relaxed font-light"
+          >
             We preserve emotional moments, delicate traditional values, and cinematic highlight archives that you will cherish for generations.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 pt-6 animate-slide-down">
+          </motion.p>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="flex flex-col sm:flex-row gap-4 pt-6"
+          >
             <Link 
               to="/portfolio" 
-              className="bg-gold text-luxury-black px-8 py-3.5 rounded-sm text-xs tracking-widest font-semibold uppercase hover:bg-gold-600 transition-colors shadow-lg shadow-gold/25 flex items-center gap-2"
+              className="bg-gold text-luxury-black px-8 py-3.5 rounded-sm text-xs tracking-widest font-semibold uppercase hover:bg-gold-600 transition-all shadow-lg hover:shadow-gold/30 flex items-center gap-2 hover:-translate-y-0.5 duration-300"
             >
               <Camera className="w-4 h-4" /> Explore Portfolio
             </Link>
             <Link 
               to="/services" 
-              className="border border-white/20 hover:border-gold/60 text-white bg-white/5 hover:bg-white/10 px-8 py-3.5 rounded-sm text-xs tracking-widest font-semibold uppercase transition-all flex items-center gap-2"
+              className="border border-white/20 hover:border-gold/60 text-white bg-white/5 hover:bg-white/10 px-8 py-3.5 rounded-sm text-xs tracking-widest font-semibold uppercase transition-all flex items-center gap-2 hover:-translate-y-0.5 duration-300"
             >
               <Calendar className="w-4 h-4" /> Book Now
             </Link>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* 2. Studio Introduction */}
       <section className="max-w-6xl mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-        <div className="relative aspect-[3/4] rounded-lg overflow-hidden group border border-stone-200 shadow-xl bg-white p-3">
-          <div className="relative w-full h-full rounded-md overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, x: -50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="relative aspect-[3/4] rounded-2xl overflow-hidden group border border-stone-200 shadow-xl bg-white p-3"
+        >
+          <div className="relative w-full h-full rounded-xl overflow-hidden bg-zinc-900">
             <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10 duration-500" />
-            <img 
+            <OptimizedImage 
               src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80" 
               alt="Pellipusthakam Photography Hyderabad team" 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              imgClassName="transition-transform duration-700 group-hover:scale-105"
             />
           </div>
-          <div className="absolute bottom-4 left-4 sm:bottom-10 sm:left-10 z-20 bg-luxury-black/95 backdrop-blur-md px-4 py-3 sm:px-6 sm:py-4 rounded border border-white/10 text-left shadow-lg max-w-[calc(100%-2rem)]">
-            <span className="font-serif text-sm sm:text-lg text-gold block font-semibold">Est. 2018</span>
-            <span className="text-[8px] sm:text-[9px] text-stone-400 uppercase tracking-widest block font-medium">Hyderabad's Premier Visual Storytellers</span>
+          <div className="absolute bottom-6 left-6 sm:bottom-10 sm:left-10 z-20 bg-luxury-black/95 backdrop-blur-md px-6 py-4 rounded-xl border border-white/15 text-left shadow-2xl max-w-[calc(100%-3rem)]">
+            <span className="font-serif text-sm sm:text-lg text-gold block font-bold">Est. 2018</span>
+            <span className="text-[8px] sm:text-[9px] text-stone-400 uppercase tracking-[0.15em] block font-semibold mt-0.5">Hyderabad's Premier Visual Storytellers</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="space-y-8 text-left">
+        <motion.div 
+          initial={{ opacity: 0, x: 50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="space-y-8 text-left"
+        >
           <div className="space-y-3">
-            <span className="text-xs tracking-widest text-gold uppercase font-semibold block">About Pellipusthakam</span>
-            <h2 className="text-3xl md:text-5xl font-serif text-luxury-black tracking-wide leading-tight uppercase">
+            <span className="text-xs tracking-widest text-gold uppercase font-bold block">About Pellipusthakam</span>
+            <h2 className="text-3xl md:text-5xl font-serif text-luxury-black tracking-wide leading-tight uppercase font-bold">
               WHERE LOVE MEETS COUTURE LENSES
             </h2>
             <div className="w-16 h-0.5 bg-gold" />
@@ -121,80 +178,120 @@ export const Home = () => {
           <p className="text-stone-500 leading-relaxed text-xs md:text-sm font-light">
             We operate beyond standard poses. Our professionals weave themselves seamlessly into your festivities, ensuring the tears, the giggles, and the energetic steps are frozen in visual poetry.
           </p>
-          <div className="grid grid-cols-3 gap-2 sm:gap-6 pt-4 text-center border-t border-stone-200">
+          <div className="grid grid-cols-3 gap-2 sm:gap-6 pt-6 border-t border-stone-200">
             <div className="space-y-1">
-              <span className="text-lg sm:text-2xl font-serif text-gold block font-bold">200+</span>
+              <span className="text-lg sm:text-2xl font-serif text-gold block font-extrabold">200+</span>
               <span className="text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-wider block font-semibold">Couples Welcomed</span>
             </div>
             <div className="border-x border-stone-200 px-1 sm:px-4 space-y-1">
-              <span className="text-lg sm:text-2xl font-serif text-gold block font-bold">5+ Yrs</span>
+              <span className="text-lg sm:text-2xl font-serif text-gold block font-extrabold">5+ Yrs</span>
               <span className="text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-wider block font-semibold">Experience</span>
             </div>
             <div className="space-y-1">
-              <span className="text-lg sm:text-2xl font-serif text-gold block font-bold">4.9/5</span>
+              <span className="text-lg sm:text-2xl font-serif text-gold block font-extrabold">4.9/5</span>
               <span className="text-[8px] sm:text-[10px] text-stone-500 uppercase tracking-wider block font-semibold">Google Review</span>
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* 3. Studio Category Grid */}
       <section className="bg-white border-y border-stone-200/60 py-28 px-6 shadow-sm">
         <div className="max-w-6xl mx-auto space-y-16">
           <div className="text-center space-y-4">
-            <span className="text-xs tracking-widest text-gold uppercase font-semibold block">Explore Galleries</span>
-            <h2 className="text-3xl md:text-5xl font-serif text-luxury-black tracking-wide uppercase">
+            <span className="text-xs tracking-widest text-gold uppercase font-bold block">Explore Galleries</span>
+            <h2 className="text-3xl md:text-5xl font-serif text-luxury-black tracking-wide uppercase font-bold">
               OUR CAPTURED CATEGORIES
             </h2>
             <div className="w-16 h-0.5 bg-gold mx-auto mt-2" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: '-50px' }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+          >
             {categories.map((cat, idx) => (
-              <div 
+              <motion.div 
                 key={idx} 
-                className="group relative bg-luxury-bg border border-stone-100 rounded-lg overflow-hidden flex flex-col justify-between hover:border-gold/30 hover:shadow-xl transition-all duration-300 shadow-sm"
+                variants={itemVariants}
+                className="group relative bg-white/70 backdrop-blur-md border border-white/50 rounded-[20px] overflow-hidden flex flex-col justify-between hover:shadow-2xl hover:shadow-gold/5 transition-all duration-400 ease-out hover:-translate-y-2.5 shadow-md"
               >
-                <div className="aspect-[4/3] w-full overflow-hidden relative">
-                  <div className="absolute inset-0 bg-luxury-black/10 group-hover:bg-luxury-black/0 transition-colors z-10 duration-300" />
-                  <img 
+                {/* Image card wrapper */}
+                <div className="aspect-[4/3] w-full overflow-hidden relative rounded-t-[20px] bg-zinc-900">
+                  {/* Subtle dark overlay */}
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/35 transition-colors z-10 duration-400" />
+                  <OptimizedImage 
                     src={cat.image} 
                     alt={cat.name} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    priority={idx === 0} // Preload the first image (Weddings)
+                    imgClassName="transition-transform duration-700 ease-out group-hover:scale-110"
                   />
                 </div>
+                
+                {/* Text Content */}
                 <div className="p-6 text-left space-y-4 flex-1 flex flex-col justify-between">
                   <div className="space-y-2">
-                    <h3 className="font-serif text-lg text-luxury-black group-hover:text-gold transition-colors duration-300">
+                    <h3 className="font-serif text-lg text-luxury-black group-hover:text-gold transition-colors duration-300 font-bold">
                       {cat.name}
                     </h3>
-                    <p className="text-xs text-stone-500 leading-relaxed font-light">
+                    <p className="text-xs text-stone-550 leading-relaxed font-light font-sans">
                       {cat.desc}
                     </p>
                   </div>
+                  
+                  {/* CTA link with sliding arrow */}
                   <Link 
                     to={`/portfolio`}
-                    className="text-gold font-sans font-semibold text-[10px] uppercase tracking-widest flex items-center gap-1 group-hover:translate-x-1.5 transition-transform self-start pt-2 border-b border-transparent hover:border-gold"
+                    className="text-gold font-sans font-bold text-[10px] uppercase tracking-widest flex items-center gap-1.5 self-start pt-2 border-b border-transparent hover:border-gold duration-300"
                   >
-                    View Grid <ArrowRight className="w-3.5 h-3.5" />
+                    <span>View Grid</span>
+                    <motion.span
+                      animate={{ x: 0 }}
+                      whileHover={{ x: 4 }}
+                      transition={{ type: 'spring', stiffness: 400 }}
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </motion.span>
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* 4. Mini Testimonial Quote */}
       <section className="max-w-4xl mx-auto px-6 text-center space-y-8">
-        <Sparkles className="w-8 h-8 text-gold mx-auto opacity-70 animate-pulse-subtle" />
-        <p className="font-serif text-2xl md:text-3.5xl italic text-luxury-black tracking-wide leading-relaxed">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <Sparkles className="w-8 h-8 text-gold mx-auto opacity-70 animate-pulse-subtle" />
+        </motion.div>
+        <motion.p 
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="font-serif text-2xl md:text-3.5xl italic text-luxury-black tracking-wide leading-relaxed"
+        >
           "Pellipusthakam didn't just photograph our wedding; they archived our emotions. Looking through our album feels like reliving our special day at the Falaknuma Palace all over again!"
-        </p>
-        <div className="space-y-2 pt-2">
+        </motion.p>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="space-y-2 pt-2"
+        >
           <span className="font-serif text-gold block font-bold text-lg tracking-wider uppercase">— Harika & Sravan</span>
-          <span className="text-[10px] text-stone-550 uppercase tracking-widest block font-semibold">Wedding Couple, Hyderabad</span>
-        </div>
+          <span className="text-[10px] text-stone-500 uppercase tracking-widest block font-semibold">Wedding Couple, Hyderabad</span>
+        </motion.div>
       </section>
     </div>
   );
