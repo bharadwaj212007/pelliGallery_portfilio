@@ -4,24 +4,30 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Verify Environment Variables
-const requiredEnvVars = ['EMAIL_USER', 'EMAIL_PASS', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE'];
+const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
 requiredEnvVars.forEach(v => {
   if (!process.env[v]) {
-    console.error(`❌ Error: Environment variable ${v} is missing!`);
+    const errorMsg = `SMTP configuration error: Environment variable ${v} is missing!`;
+    console.error(`❌ ${errorMsg}`);
+    throw new Error(errorMsg);
   }
 });
 
-const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+const user = process.env.SMTP_USER;
+const pass = process.env.SMTP_PASS;
 const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-const port = parseInt(process.env.SMTP_PORT || '465', 10);
-const secure = process.env.SMTP_SECURE !== undefined ? (process.env.SMTP_SECURE === 'true') : (port === 465);
+const port = parseInt(process.env.SMTP_PORT || '587', 10);
+const secure = process.env.SMTP_SECURE === 'true'; // false for 587
 const fromEmail = process.env.SMTP_FROM || user;
 
 const transporter = nodemailer.createTransport({
   host,
   port,
   secure,
+  requireTLS: true,
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
   auth: {
     user,
     pass
@@ -29,42 +35,46 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verification function
-export const verifySMTPConnection = async () => {
-  console.log('🔍 Verifying SMTP Connection...');
-  console.log(`SMTP Host: ${host}`);
-  console.log(`SMTP Port: ${port}`);
-  console.log(`SMTP Secure: ${secure}`);
-  console.log(`SMTP User: ${user}`);
-  console.log(`SMTP Pass Loaded: ${pass ? 'YES' : 'NO'}`);
-
+export const verifySMTPConnection = async (attempt = 1) => {
+  console.log('SMTP connection started');
   try {
     await transporter.verify();
-    console.log('✓ SMTP Connected');
+    console.log('SMTP verified');
     return true;
-  } catch (err) {
-    console.error('❌ SMTP Connection Failed');
-    console.error(err.message);
-    console.error(err.stack);
+  } catch (error) {
+    console.error(`❌ SMTP Connection Failed (Attempt ${attempt}/3):`);
+    console.error(error);
+    if (error.code) console.error('Error Code:', error.code);
+    if (error.command) console.error('Error Command:', error.command);
+    if (error.response) console.error('Error Response:', error.response);
+
+    if (attempt < 3) {
+      console.log(`🔄 Retrying SMTP connection (Attempt ${attempt + 1}/3) in 2 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return verifySMTPConnection(attempt + 1);
+    }
     return false;
   }
 };
 
-// Reusable send function with single retry
+// Reusable send function with up to 3 attempts
 export const sendEmailWithRetry = async (mailOptions, attempt = 1) => {
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent successfully (Attempt ${attempt}): ${info.messageId}`);
     return info;
   } catch (err) {
-    console.error(`❌ Email send failed (Attempt ${attempt}):`, err.message);
-    console.error(err.stack); // Log complete stack trace
-    if (attempt === 1) {
-      console.log('🔄 Retrying email send...');
-      // Wait 1 second before retrying
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return sendEmailWithRetry(mailOptions, 2);
+    console.error(`❌ Email send attempt ${attempt} failed:`);
+    console.error(err);
+    if (err.code) console.error('Error Code:', err.code);
+    if (err.command) console.error('Error Command:', err.command);
+    if (err.response) console.error('Error Response:', err.response);
+
+    if (attempt < 3) {
+      console.log(`🔄 Retrying email send (Attempt ${attempt + 1}/3) in 2 seconds...`);
+      // Wait 2 seconds before retrying
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return sendEmailWithRetry(mailOptions, attempt + 1);
     }
-    console.error('❌ Email send failed after retry.');
     throw err;
   }
 };
@@ -72,7 +82,6 @@ export const sendEmailWithRetry = async (mailOptions, attempt = 1) => {
 // Send customer booking confirmation (Pending status received)
 export const sendCustomerBookingReceivedEmail = async (booking) => {
   try {
-    console.log('✓ Customer email started');
     // Parse event_type from special_requirements
     const typeMatch = booking.special_requirements?.match(/\[Event Type:\s*(.*?)\]/);
     const event_type = typeMatch ? typeMatch[1] : 'N/A';
@@ -142,22 +151,21 @@ export const sendCustomerBookingReceivedEmail = async (booking) => {
     };
 
     const info = await sendEmailWithRetry(mailOptions);
-    if (info) {
-      console.log('✓ Customer email sent successfully');
-    }
+    console.log('Customer email sent');
     return info;
   } catch (err) {
-    console.error('Error in sendCustomerBookingReceivedEmail:');
-    console.error(err.message);
-    console.error(err.stack);
-    throw err;
+    console.error('Customer email failed:');
+    console.error(err);
+    if (err.code) console.error('Error Code:', err.code);
+    if (err.command) console.error('Error Command:', err.command);
+    if (err.response) console.error('Error Response:', err.response);
+    return null;
   }
 };
 
 // Send admin booking notification
 export const sendAdminBookingReceivedEmail = async (booking) => {
   try {
-    console.log('✓ Admin email started');
     // Parse phone & event_type from special_requirements
     const phoneMatch = booking.special_requirements?.match(/\[Phone:\s*(.*?)\]/);
     const typeMatch = booking.special_requirements?.match(/\[Event Type:\s*(.*?)\]/);
@@ -175,15 +183,15 @@ export const sendAdminBookingReceivedEmail = async (booking) => {
     };
 
     const info = await sendEmailWithRetry(mailOptions);
-    if (info) {
-      console.log('✓ Admin email sent successfully');
-    }
+    console.log('Admin email sent');
     return info;
   } catch (err) {
-    console.error('Error in sendAdminBookingReceivedEmail:');
-    console.error(err.message);
-    console.error(err.stack);
-    throw err;
+    console.error('Admin email failed:');
+    console.error(err);
+    if (err.code) console.error('Error Code:', err.code);
+    if (err.command) console.error('Error Command:', err.command);
+    if (err.response) console.error('Error Response:', err.response);
+    return null;
   }
 };
 
@@ -289,8 +297,10 @@ export const sendCustomerBookingStatusChangedEmail = async (booking, status) => 
     return sendEmailWithRetry(mailOptions);
   } catch (err) {
     console.error('Error in sendCustomerBookingStatusChangedEmail:');
-    console.error(err.message);
-    console.error(err.stack);
+    console.error(err);
+    if (err.code) console.error('Error Code:', err.code);
+    if (err.command) console.error('Error Command:', err.command);
+    if (err.response) console.error('Error Response:', err.response);
     throw err;
   }
 };

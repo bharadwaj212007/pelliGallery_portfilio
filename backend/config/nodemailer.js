@@ -1,26 +1,29 @@
 import nodemailer from 'nodemailer';
 
-const isMailConfigured = 
-  process.env.SMTP_HOST && 
-  process.env.SMTP_USER && 
-  process.env.SMTP_PASS;
+// Verify Environment Variables
+const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
+requiredEnvVars.forEach(v => {
+  if (!process.env[v]) {
+    const errorMsg = `SMTP configuration error: Environment variable ${v} is missing!`;
+    console.error(`❌ ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
+});
 
-let transporter = null;
-
-if (isMailConfigured) {
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-  console.log('Nodemailer SMTP service initialized successfully.');
-} else {
-  console.warn('Nodemailer SMTP details missing in .env. Falling back to terminal log output for email notifications.');
-}
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587', 10),
+  secure: process.env.SMTP_SECURE === 'true',
+  requireTLS: true,
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+console.log('Nodemailer SMTP service initialized successfully.');
 
 export const sendBookingEmail = async (bookingDetails, packagesList) => {
   const mailSubject = `New Wedding Booking Inquiry - ${bookingDetails.customer_name}`;
