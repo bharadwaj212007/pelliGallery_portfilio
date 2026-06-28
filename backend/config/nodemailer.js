@@ -1,14 +1,11 @@
 import nodemailer from 'nodemailer';
 
-// Verify Environment Variables
+// Verify Environment Variables (Warn, do not crash immediately at startup)
 const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
-requiredEnvVars.forEach(v => {
-  if (!process.env[v]) {
-    const errorMsg = `SMTP configuration error: Environment variable ${v} is missing!`;
-    console.error(`❌ ${errorMsg}`);
-    throw new Error(errorMsg);
-  }
-});
+const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+if (missingVars.length > 0) {
+  console.warn(`⚠️ Warning: Missing SMTP environment variables in nodemailer.js: ${missingVars.join(', ')}`);
+}
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',

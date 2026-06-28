@@ -1,6 +1,5 @@
+import 'dotenv/config';
 import './dns-preload.js';
-import dotenv from 'dotenv';
-dotenv.config();
 
 // Debugging (remove later)
 console.log(

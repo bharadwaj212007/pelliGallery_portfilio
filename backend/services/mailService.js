@@ -3,42 +3,60 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Verify Environment Variables
+// Startup Logging
+console.log("SMTP_HOST:", process.env.SMTP_HOST);
+console.log("SMTP_PORT:", process.env.SMTP_PORT);
+console.log("SMTP_USER:", process.env.SMTP_USER);
+console.log("SMTP_PASS Loaded:", !!process.env.SMTP_PASS);
+
+// Verify Environment Variables (Warn, do not crash immediately at startup)
 const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS'];
-requiredEnvVars.forEach(v => {
-  if (!process.env[v]) {
-    const errorMsg = `SMTP configuration error: Environment variable ${v} is missing!`;
-    console.error(`❌ ${errorMsg}`);
-    throw new Error(errorMsg);
-  }
-});
+const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+if (missingVars.length > 0) {
+  console.warn(`⚠️ Warning: Missing SMTP environment variables: ${missingVars.join(', ')}`);
+}
 
-const user = process.env.SMTP_USER;
-const pass = process.env.SMTP_PASS;
-const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-const port = parseInt(process.env.SMTP_PORT || '587', 10);
-const secure = process.env.SMTP_SECURE === 'true'; // false for 587
-const fromEmail = process.env.SMTP_FROM || user;
+const getFromEmail = () => process.env.SMTP_FROM || process.env.SMTP_USER;
 
-const transporter = nodemailer.createTransport({
-  host,
-  port,
-  secure,
-  requireTLS: true,
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
-  auth: {
-    user,
-    pass
-  }
-});
+let transporter = null;
+
+const getTransporter = () => {
+  if (transporter) return transporter;
+
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT || '587', 10);
+  const secure = process.env.SMTP_SECURE === 'true'; // false for 587
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    requireTLS: true,
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
+    auth: {
+      user,
+      pass
+    }
+  });
+  return transporter;
+};
 
 // Verification function
 export const verifySMTPConnection = async (attempt = 1) => {
+  const currentMissing = requiredEnvVars.filter(v => !process.env[v]);
+  if (currentMissing.length > 0) {
+    console.error(`❌ SMTP Connection Verification aborted: missing variables: ${currentMissing.join(', ')}`);
+    return false;
+  }
+
   console.log('SMTP connection started');
   try {
-    await transporter.verify();
+    const currentTransporter = getTransporter();
+    await currentTransporter.verify();
     console.log('SMTP verified');
     return true;
   } catch (error) {
@@ -59,8 +77,16 @@ export const verifySMTPConnection = async (attempt = 1) => {
 
 // Reusable send function with up to 3 attempts
 export const sendEmailWithRetry = async (mailOptions, attempt = 1) => {
+  const currentMissing = requiredEnvVars.filter(v => !process.env[v]);
+  if (currentMissing.length > 0) {
+    const errorMsg = `SMTP send aborted: missing variables: ${currentMissing.join(', ')}`;
+    console.error(`❌ ${errorMsg}`);
+    throw new Error(errorMsg);
+  }
+
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const currentTransporter = getTransporter();
+    const info = await currentTransporter.sendMail(mailOptions);
     return info;
   } catch (err) {
     console.error(`❌ Email send attempt ${attempt} failed:`);
@@ -143,7 +169,7 @@ export const sendCustomerBookingReceivedEmail = async (booking) => {
     `;
 
     const mailOptions = {
-      from: `"Pellipusthakam Photography" <${fromEmail}>`,
+      from: `"Pellipusthakam Photography" <${getFromEmail()}>`,
       to: booking.customer_email,
       subject: 'Booking Confirmation - Pellipusthakam Photography',
       text: `Hello ${booking.customer_name},\n\nThank you for choosing Pellipusthakam Photography. Your booking has been successfully received.\n\nBooking ID: ${booking._id || booking.id}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}\n\nOur team will review your request and contact you shortly.`,
@@ -176,8 +202,8 @@ export const sendAdminBookingReceivedEmail = async (booking) => {
     const formattedPrice = parseFloat(booking.total_price).toLocaleString('en-IN');
 
     const mailOptions = {
-      from: `"PelliGallery System" <${fromEmail}>`,
-      to: fromEmail, // Admin email is fromEmail
+      from: `"PelliGallery System" <${getFromEmail()}>`,
+      to: getFromEmail(), // Admin email is getFromEmail()
       subject: `New Booking Received from ${booking.customer_name}`,
       text: `New Booking Received\n\nCustomer Name: ${booking.customer_name}\nEmail: ${booking.customer_email}\nPhone: ${customer_phone}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}\nEvent Date: ${booking.event_date}\nLocation: ${booking.event_location}\nBooking ID: ${booking._id || booking.id}`
     };
@@ -257,7 +283,7 @@ export const sendCustomerBookingStatusChangedEmail = async (booking, status) => 
       `;
 
       mailOptions = {
-        from: `"Pellipusthakam Photography" <${fromEmail}>`,
+        from: `"Pellipusthakam Photography" <${getFromEmail()}>`,
         to: booking.customer_email,
         subject: 'Booking Confirmed - Pellipusthakam Photography',
         text: `Hello ${booking.customer_name},\n\nYour booking has been confirmed successfully.\n\nEvent: ${booking.event_location}\nDate: ${formattedDate}\nPackage: ${packagesStr}\nAmount: INR ${formattedPrice}`,
@@ -286,7 +312,7 @@ export const sendCustomerBookingStatusChangedEmail = async (booking, status) => 
       `;
 
       mailOptions = {
-        from: `"Pellipusthakam Photography" <${fromEmail}>`,
+        from: `"Pellipusthakam Photography" <${getFromEmail()}>`,
         to: booking.customer_email,
         subject: 'Booking Cancelled - Pellipusthakam Photography',
         text: `Hello ${booking.customer_name},\n\nYour booking reference #${booking._id || booking.id} has been cancelled. Please contact us for more information.`,
@@ -308,10 +334,11 @@ export const sendCustomerBookingStatusChangedEmail = async (booking, status) => 
 // Send simple test email
 export const sendTestEmail = async (toEmail) => {
   const mailOptions = {
-    from: fromEmail,
+    from: getFromEmail(),
     to: toEmail,
     subject: 'PelliGallery Test Email Connection',
     text: 'SMTP setup test succeeded.'
   };
-  return transporter.sendMail(mailOptions);
+  const currentTransporter = getTransporter();
+  return currentTransporter.sendMail(mailOptions);
 };
