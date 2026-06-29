@@ -16,16 +16,17 @@ console.log(
   process.env.CLOUDINARY_API_SECRET ? 'Loaded' : 'Missing'
 );
 
-const isCloudinaryConfigured =
-  !!process.env.CLOUDINARY_CLOUD_NAME &&
-  !!process.env.CLOUDINARY_API_KEY &&
-  !!process.env.CLOUDINARY_API_SECRET;
+const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || '').trim();
+const apiKey = (process.env.CLOUDINARY_API_KEY || '').trim();
+const apiSecret = (process.env.CLOUDINARY_API_SECRET || '').trim();
+
+const isCloudinaryConfigured = !!cloudName && !!apiKey && !!apiSecret;
 
 if (isCloudinaryConfigured) {
   cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
   });
 
   console.log(
@@ -61,15 +62,45 @@ export const uploadImage = async (fileBuffer, title = 'gallery_image') => {
     };
   }
 
+  const timestamp = Math.round(new Date().getTime() / 1000);
+  const cleanTitle = (title || 'gallery_image').trim();
+
+  // Define exact parameters to ensure consistency during signing and upload
+  const paramsToSign = {
+    folder: 'pelligallery',
+    filename_override: cleanTitle,
+    timestamp: timestamp,
+    use_filename: true,
+    overwrite: true,
+  };
+
+  // Generate manual signature using trimmed apiSecret
+  const signature = cloudinary.utils.api_sign_request(paramsToSign, apiSecret);
+
+  // Log diagnostic parameters as required
+  console.log('[Cloudinary Custom Signature Diagnostics]');
+  console.log('- Parameters used for signature:', JSON.stringify(paramsToSign, null, 2));
+  console.log('- Generated signature:', signature);
+  console.log('- Parameters received by Cloudinary (Sent):', JSON.stringify({
+    ...paramsToSign,
+    signature,
+    api_key: apiKey,
+    resource_type: 'image',
+  }, null, 2));
+
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: 'pelligallery',
+        ...paramsToSign,
+        signature: signature,
+        api_key: apiKey,
         resource_type: 'image',
-        filename_override: title,
       },
       (error, result) => {
-        if (error) return reject(error);
+        if (error) {
+          console.error('[Cloudinary SDK upload_stream Error]:', error);
+          return reject(error);
+        }
         resolve(result);
       }
     );
