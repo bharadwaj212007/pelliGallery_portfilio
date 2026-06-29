@@ -62,38 +62,16 @@ export const uploadImage = async (fileBuffer, title = 'gallery_image') => {
     };
   }
 
-  const timestamp = Math.round(new Date().getTime() / 1000);
-  const cleanTitle = (title || 'gallery_image').trim();
-
-  // Define exact parameters to ensure consistency during signing and upload
-  const paramsToSign = {
-    folder: 'pelligallery',
-    filename_override: cleanTitle,
-    timestamp: timestamp,
-    use_filename: true,
-    overwrite: true,
-  };
-
-  // Generate manual signature using trimmed apiSecret
-  const signature = cloudinary.utils.api_sign_request(paramsToSign, apiSecret);
-
-  // Log diagnostic parameters as required
-  console.log('[Cloudinary Custom Signature Diagnostics]');
-  console.log('- Parameters used for signature:', JSON.stringify(paramsToSign, null, 2));
-  console.log('- Generated signature:', signature);
-  console.log('- Parameters received by Cloudinary (Sent):', JSON.stringify({
-    ...paramsToSign,
-    signature,
-    api_key: apiKey,
-    resource_type: 'image',
-  }, null, 2));
+  const cleanTitle = (title || 'gallery_image')
+    .trim()
+    .replace(/[^a-zA-Z0-9-_]/g, '_');
 
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        ...paramsToSign,
-        signature: signature,
-        api_key: apiKey,
+        folder: 'pelligallery',
+        public_id: cleanTitle,
+        overwrite: true,
         resource_type: 'image',
       },
       (error, result) => {
