@@ -90,7 +90,7 @@ router.post('/', verifyToken, upload.single('image'), async (req, res) => {
     }
 
     // Upload to Cloudinary
-    const cloudinaryResult = await uploadImage(req.file.buffer, title || 'gallery_image');
+    const cloudinaryResult = await uploadImage(req.file, title || 'gallery_image');
 
     // Save to MongoDB
     const newImage = await GalleryImage.create({

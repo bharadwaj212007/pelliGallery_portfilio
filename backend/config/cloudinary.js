@@ -39,7 +39,7 @@ if (isCloudinaryConfigured) {
 }
 
 // Upload dynamic function supporting stream/buffer or file paths
-export const uploadImage = async (fileBuffer, title = 'gallery_image') => {
+export const uploadImage = async (fileInput, title = 'gallery_image') => {
   if (!isCloudinaryConfigured) {
     // Return a random high quality wedding photography placeholder URL from Unsplash
     const fallbackUrls = [
@@ -62,21 +62,60 @@ export const uploadImage = async (fileBuffer, title = 'gallery_image') => {
     };
   }
 
+  // Determine if input is a Multer file or a raw Buffer
+  let fileBuffer;
+  let fileName = 'unknown_buffer';
+  let mimeType = 'image/jpeg'; // Default assumption for raw buffer
+  let fileSize = 0;
+
+  if (Buffer.isBuffer(fileInput)) {
+    fileBuffer = fileInput;
+    fileSize = fileInput.length;
+  } else if (fileInput && Buffer.isBuffer(fileInput.buffer)) {
+    fileBuffer = fileInput.buffer;
+    fileName = fileInput.originalname || 'unknown_multer';
+    mimeType = fileInput.mimetype || 'image/jpeg';
+    fileSize = fileInput.size || fileInput.buffer.length;
+  } else {
+    throw new Error('Invalid file input: Must be a Buffer or a Multer file object.');
+  }
+
+  // Verify buffer is valid and not empty
+  if (!fileBuffer || fileBuffer.length === 0) {
+    throw new Error('Invalid file buffer: Buffer is empty.');
+  }
+
   const cleanTitle = (title || 'gallery_image')
     .trim()
     .replace(/[^a-zA-Z0-9-_]/g, '_');
 
+  const uploadOptions = {
+    folder: 'pelligallery',
+    public_id: cleanTitle,
+    overwrite: true,
+    resource_type: 'image',
+  };
+
+  // Log details before upload
+  console.log('[Cloudinary Upload Request Diagnostics]');
+  console.log(`- File Name: ${fileName}`);
+  console.log(`- MIME Type: ${mimeType}`);
+  console.log(`- File Size (reported): ${fileSize} bytes`);
+  console.log(`- Buffer Length: ${fileBuffer.length} bytes`);
+  console.log(`- Upload Options:`, JSON.stringify(uploadOptions, null, 2));
+
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: 'pelligallery',
-        public_id: cleanTitle,
-        overwrite: true,
-        resource_type: 'image',
-      },
+      uploadOptions,
       (error, result) => {
         if (error) {
-          console.error('[Cloudinary SDK upload_stream Error]:', error);
+          console.error("Cloudinary Upload Error:", {
+            message: error.message,
+            http_code: error.http_code,
+            name: error.name,
+            stack: error.stack,
+            error
+          });
           return reject(error);
         }
         resolve(result);

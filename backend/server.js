@@ -87,6 +87,49 @@ const testEmailHandler = async (req, res) => {
 app.get('/api/test-email', testEmailHandler);
 app.post('/api/test-email', testEmailHandler);
 
+// Temporary Cloudinary upload test endpoint
+app.get('/api/test-cloudinary', async (req, res) => {
+  console.log('\n[API AUDIT] Received GET /api/test-cloudinary');
+  try {
+    // Generate a simple 1x1 transparent GIF buffer as a test image
+    const testGifBuffer = Buffer.from(
+      'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+      'base64'
+    );
+    
+    const { uploadImage } = await import('./config/cloudinary.js');
+    console.log('[test-cloudinary] Calling uploadImage...');
+    const result = await uploadImage(testGifBuffer, 'test_sample_image');
+    
+    console.log('[test-cloudinary] Upload succeeded. URL:', result.secure_url);
+    res.json({
+      success: true,
+      message: 'Test image uploaded successfully to Cloudinary.',
+      url: result.secure_url,
+      result
+    });
+  } catch (error) {
+    console.error('[test-cloudinary] Upload failed. Formatted error:', {
+      message: error.message,
+      http_code: error.http_code,
+      name: error.name,
+      stack: error.stack,
+      error
+    });
+    res.status(500).json({
+      success: false,
+      message: 'Cloudinary upload failed.',
+      error: {
+        message: error.message,
+        http_code: error.http_code,
+        name: error.name,
+        stack: error.stack,
+        error
+      }
+    });
+  }
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/gallery', galleryRoutes);
