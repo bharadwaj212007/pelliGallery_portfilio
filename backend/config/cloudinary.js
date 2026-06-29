@@ -97,25 +97,36 @@ export const uploadImage = async (fileInput, title = 'gallery_image') => {
   };
 
   // Log details before upload
+  const rawKey = apiKey || '';
+  let maskedKey = 'N/A';
+  if (rawKey) {
+    if (rawKey.length > 6) {
+      maskedKey = rawKey.substring(0, 3) + '*'.repeat(rawKey.length - 6) + rawKey.substring(rawKey.length - 3);
+    } else {
+      maskedKey = rawKey.substring(0, 1) + '*'.repeat(rawKey.length - 2) + rawKey.substring(rawKey.length - 1);
+    }
+  }
+
   console.log('[Cloudinary Upload Request Diagnostics]');
-  console.log(`- File Name: ${fileName}`);
-  console.log(`- MIME Type: ${mimeType}`);
-  console.log(`- File Size (reported): ${fileSize} bytes`);
-  console.log(`- Buffer Length: ${fileBuffer.length} bytes`);
-  console.log(`- Upload Options:`, JSON.stringify(uploadOptions, null, 2));
+  console.log(`- cloud_name: ${cloudName}`);
+  console.log(`- api_key: ${maskedKey}`);
+  console.log(`- upload options:`, JSON.stringify(uploadOptions, null, 2));
+  console.log(`- file name: ${fileName}`);
+  console.log(`- mime type: ${mimeType}`);
+  console.log(`- buffer length: ${fileBuffer.length} bytes`);
+  console.log(`- public_id: ${uploadOptions.public_id}`);
+  console.log(`- folder: ${uploadOptions.folder}`);
 
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       uploadOptions,
       (error, result) => {
         if (error) {
-          console.error("Cloudinary Upload Error:", {
-            message: error.message,
-            http_code: error.http_code,
-            name: error.name,
-            stack: error.stack,
-            error
-          });
+          console.error(JSON.stringify(error, null, 2));
+          console.error(error);
+          console.error(error.message);
+          console.error(error.http_code);
+          console.error(error.stack);
           return reject(error);
         }
         resolve(result);

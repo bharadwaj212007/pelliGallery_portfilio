@@ -91,31 +91,51 @@ app.post('/api/test-email', testEmailHandler);
 app.get('/api/test-cloudinary', async (req, res) => {
   console.log('\n[API AUDIT] Received GET /api/test-cloudinary');
   try {
-    // Generate a simple 1x1 transparent GIF buffer as a test image
-    const testGifBuffer = Buffer.from(
-      'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-      'base64'
-    );
+    const { default: cloudinary } = await import('./config/cloudinary.js');
+    console.log('[test-cloudinary] Executing direct upload with cloudinary.uploader.upload()...');
     
-    const { uploadImage } = await import('./config/cloudinary.js');
-    console.log('[test-cloudinary] Calling uploadImage...');
-    const result = await uploadImage(testGifBuffer, 'test_sample_image');
+    const testDataUri = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    
+    // Log parameters before upload
+    const rawKey = (process.env.CLOUDINARY_API_KEY || '').trim();
+    let maskedKey = 'N/A';
+    if (rawKey) {
+      if (rawKey.length > 6) {
+        maskedKey = rawKey.substring(0, 3) + '*'.repeat(rawKey.length - 6) + rawKey.substring(rawKey.length - 3);
+      } else {
+        maskedKey = rawKey.substring(0, 1) + '*'.repeat(rawKey.length - 2) + rawKey.substring(rawKey.length - 1);
+      }
+    }
+
+    const uploadOptions = {
+      folder: 'pelligallery_test',
+      public_id: `direct_test_upload_${Date.now()}`,
+      overwrite: true,
+      resource_type: 'image',
+    };
+
+    console.log('[test-cloudinary] Diagnostics:');
+    console.log(`- cloud_name: ${(process.env.CLOUDINARY_CLOUD_NAME || '').trim()}`);
+    console.log(`- api_key: ${maskedKey}`);
+    console.log(`- upload options:`, JSON.stringify(uploadOptions, null, 2));
+
+    const result = await cloudinary.uploader.upload(testDataUri, uploadOptions);
     
     console.log('[test-cloudinary] Upload succeeded. URL:', result.secure_url);
     res.json({
       success: true,
-      message: 'Test image uploaded successfully to Cloudinary.',
+      message: 'Test image uploaded successfully to Cloudinary using direct upload.',
       url: result.secure_url,
       result
     });
   } catch (error) {
-    console.error('[test-cloudinary] Upload failed. Formatted error:', {
-      message: error.message,
-      http_code: error.http_code,
-      name: error.name,
-      stack: error.stack,
-      error
-    });
+    console.error('[test-cloudinary] Direct upload failed.');
+    console.error(JSON.stringify(error, null, 2));
+    console.error(error);
+    console.error(error.message);
+    console.error(error.http_code);
+    console.error(error.stack);
+    
     res.status(500).json({
       success: false,
       message: 'Cloudinary upload failed.',
